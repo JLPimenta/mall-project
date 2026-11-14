@@ -155,6 +155,26 @@ Estados obrigatórios em toda tela com dados: carregando (Skeleton), vazio, erro
 
 O mesmo vale para código e documentação: comentários só quando explicam o porquê; README e docs objetivos.
 
+## Testes
+
+Toda funcionalidade é entregue com testes. Uma tarefa não está concluída sem eles passando.
+
+Backend (`./mvnw test`):
+
+- Teste unitário (JUnit 5 + Mockito, sem contexto Spring) para cada service e cada classe com regra: caminho feliz, cada `DomainException`, efeitos colaterais (o que é ou não salvo).
+- `@WebMvcTest` para cada controller: status HTTP, formato do JSON, validação, 401 sem sessão e 403 por perfil.
+- Nomes de métodos em pt-BR descrevendo o comportamento (`rejeitaCodigoDuplicado`).
+
+Frontend (`npm run test:e2e`, Playwright em `frontend/e2e`):
+
+- Cada funcionalidade do frontend tem seu spec: `e2e/<modulo>.spec.ts`. Helpers comuns em `e2e/support/` (login por perfil em `support/auth.ts`).
+- Os testes rodam contra a stack real com a seed de dev; o backend precisa estar no ar.
+- Cobrir: fluxo principal, erros exibidos, estados vazio e de erro, permissões por perfil e estrutura HTML5 (rótulos, `required`, um `h1`, um `main`).
+- Localizar por papel e rótulo acessível (`getByRole`, `getByLabel`), não por classe CSS. Se um elemento não for localizável assim, corrigir a acessibilidade do componente.
+- Todos rodam em `desktop` e `mobile`; tratar a gaveta do menu no celular.
+- Estados difíceis de reproduzir (401, 500) são simulados com `page.route`.
+- Testes não podem depender de dados criados por outro teste. Se precisar criar dados, criar no próprio teste com nome único.
+
 ## Escopo e prioridade
 
 Implementar na ordem: P0 completo antes de qualquer P1.

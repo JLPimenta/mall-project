@@ -57,3 +57,15 @@ cd backend && ./mvnw test
 ```bash
 cd frontend && npm run build && npm run lint
 ```
+
+Testes E2E (Playwright). Exigem o backend no ar com a seed de dev; o Vite é iniciado automaticamente se não estiver rodando. Na primeira vez, instale o navegador:
+
+```bash
+cd frontend && npx playwright install chromium
+```
+
+```bash
+cd frontend && npm run test:e2e
+```
+
+Relatório em `frontend/playwright-report`. Para outra URL: `E2E_BASE_URL=http://host:porta npm run test:e2e`.
