@@ -8,6 +8,37 @@ async function navegacao(page: Page, isMobile: boolean) {
 }
 
 test.describe('Tela de login', () => {
+  test('mostra o logo, o título e, em telas largas, a frase da marca', async ({ page, isMobile }) => {
+    await page.goto('/login')
+    await expect(page.getByRole('img', { name: 'SmartMall Ops IA' })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1, name: 'Entrar no sistema' })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1)
+    await expect(page.getByRole('heading', { level: 2, name: 'Perfis de demonstração' })).toBeVisible()
+    test.skip(isMobile, 'O painel da marca só aparece em telas largas.')
+
+    // A frase inteira fica para leitores de tela; as letras visíveis são decorativas (easter egg, aria-hidden).
+    await expect(page.getByRole('complementary')).toMatchAriaSnapshot(`
+      - paragraph: Boas-vindas ao SmartMall Ops IA
+      - paragraph: Acompanhe chamados, tarefas, equipes e estoque do Capim Dourado Shopping.
+    `)
+  })
+
+  test('easter egg: dois cliques no logo soltam o elefante, e a frase volta depois', async ({ page, isMobile }) => {
+    test.skip(isMobile, 'O painel da marca só aparece em telas largas.')
+    await page.goto('/login')
+    const elefante = page.getByRole('img', { name: 'Elefante' })
+    await expect(elefante).toHaveCount(0)
+
+    await page.getByRole('complementary').getByRole('img', { name: 'SmartMall Ops IA' }).dblclick()
+
+    await expect(elefante).toBeVisible()
+    // Travessia (3,6 s) + pausa (1,8 s): o elefante sai e a frase continua acessível.
+    await expect(elefante).toHaveCount(0, { timeout: 10_000 })
+    await expect(page.getByRole('complementary')).toMatchAriaSnapshot(`
+      - paragraph: Boas-vindas ao SmartMall Ops IA
+    `)
+  })
+
   test('rota interna sem sessão leva ao login', async ({ page }) => {
     await page.goto('/central')
 

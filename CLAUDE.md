@@ -206,6 +206,7 @@ Componentização:
 - Chamadas HTTP só via `lib/api.ts` (prefixo `/api`, erros como `ApiError`; upload com `api.upload` e `FormData`). Listagens paginadas retornam `Page<T>` (`content` + `page`).
 - Status e prioridade sempre pelos componentes compartilhados, para manter cor e texto consistentes. Cada situação tem um tom próprio (`lib/tons.ts`: `seloDoTom`, `marcadorDoTom`, `pontoDoTom`), o mesmo no selo, no calendário e na legenda; duas situações não dividem o mesmo tom.
 - Cores por tokens CSS do tema shadcn (`--primary`, etc.), nunca hex solto em componente. Paleta base do protótipo: navy `#061a37`, azul `#087cbe`, ciano `#36c6ea`, verde `#24ae72`, vermelho `#ec545b`, âmbar `#f0a633`.
+- **Identidade visual (padrão do login):** painéis escuros em gradiente navy → azul (`bg-painel-marca`; o menu lateral usa o mesmo gradiente), destaque em ciano (`text-marca-ciano`), fundo da página levemente azulado, cartões brancos com borda clara e o botão principal em gradiente azul → ciano (`bg-gradiente-primario`, já na variante padrão do `Button`). Logo: `Logo`/`LogoIcone` (`components/layout/logo.tsx`), com `tom="claro"` sobre fundo escuro.
 
 HTML5 e acessibilidade (tecnologia sorteada, seção 9 da documentação — é critério de avaliação):
 
