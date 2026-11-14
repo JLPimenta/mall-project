@@ -19,7 +19,18 @@ export type ChecklistItem = {
   tipoResposta: TipoResposta
   obrigatorio: boolean
   maxCaracteres: number | null
+  /** Só Sim/Não: resposta esperada; outra resposta na execução exige abrir chamado. Nulo = sem regra. */
+  respostaEsperada: RespostaEsperada | null
 }
+
+export type RespostaEsperada = 'SIM' | 'NAO'
+
+/** Resposta esperada de itens Sim/Não; "Qualquer" = sem regra de conformidade. */
+export const respostasEsperadas: { valor: RespostaEsperada | 'QUALQUER'; rotulo: string }[] = [
+  { valor: 'SIM', rotulo: 'Sim' },
+  { valor: 'NAO', rotulo: 'Não' },
+  { valor: 'QUALQUER', rotulo: 'Qualquer' },
+]
 
 /** Espelha ChecklistResponse. */
 export type Checklist = {
@@ -38,5 +49,6 @@ export type ChecklistRequest = {
     tipoResposta: TipoResposta
     obrigatorio: boolean
     maxCaracteres?: number
+    respostaEsperada?: RespostaEsperada
   }[]
 }

@@ -84,6 +84,8 @@ public class ChecklistService extends BaseService<Checklist> implements ICheckli
             item.setPergunta(item.getPergunta() == null ? null : item.getPergunta().trim());
             if (item.getObrigatorio() == null) item.setObrigatorio(Boolean.TRUE);
             if (item.getTipoResposta() != TipoResposta.TEXTO) item.setMaxCaracteres(null);
+            if (item.getTipoResposta() != TipoResposta.SIM_NAO) item.setRespostaEsperada(null);
+            if (item.getTipoResposta() != TipoResposta.SIM_NAO) item.setRespostaEsperada(null);
         }
     }
 

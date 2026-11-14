@@ -49,10 +49,17 @@ public class TarefaDetalheResponse {
         private Boolean obrigatorio;
         private Integer maxCaracteres;
         private String resposta;
+        /** Só Sim/Não: resposta esperada; outra resposta é não conformidade. */
+        private String respostaEsperada;
+        private boolean naoConforme;
+        /** Chamado aberto a partir do item (id e protocolo, em `nome`). */
+        private Resumo chamado;
 
         public static Item de(TarefaItem item) {
+            var chamado = item.getChamado() == null ? null : new Resumo(item.getChamado().getId(), item.getChamado().getProtocolo(), null);
             return new Item(item.getId(), item.getOrdem(), item.getPergunta(), item.getTipoResposta(),
-                    item.getObrigatorio(), item.getMaxCaracteres(), item.getResposta());
+                    item.getObrigatorio(), item.getMaxCaracteres(), item.getResposta(), item.getRespostaEsperada(),
+                    item.naoConforme(), chamado);
         }
     }
 

@@ -71,6 +71,8 @@ public class SecurityConfiguration {
                         .requestMatchers(HttpMethod.GET, "/api/publico/local/*").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/publico/chamado").permitAll()
                         .requestMatchers("/api/publico/**").denyAll()
+                        // Abrir chamado: qualquer perfil logado; consultar e decidir: gestão.
+                        .requestMatchers(HttpMethod.POST, "/api/chamado").authenticated()
                         .requestMatchers("/api/chamado", "/api/chamado/**").hasAnyRole(GESTAO)
                         .requestMatchers("/api/central", "/api/central/**").hasAnyRole(GESTAO)
                         .requestMatchers("/api/relatorio", "/api/relatorio/**").hasAnyRole(GESTAO)
@@ -81,6 +83,10 @@ public class SecurityConfiguration {
                         .requestMatchers(HttpMethod.DELETE, "/api/estoque/item/**").hasAnyRole(GESTAO)
                         .requestMatchers("/api/disponibilidade", "/api/ausencia", "/api/ausencia/**").hasAnyRole(GESTAO)
                         .requestMatchers("/api/checklist", "/api/checklist/**").hasAnyRole(GESTAO)
+                        // Pisos: consulta para todos (listas e filtros); cadastro, planta, marcadores e mapa só a gestão.
+                        .requestMatchers(HttpMethod.GET, "/api/piso").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/piso/*").authenticated()
+                        .requestMatchers("/api/piso", "/api/piso/**").hasAnyRole(GESTAO)
                         .requestMatchers("/api/equipamento", "/api/equipamento/**").hasAnyRole(GESTAO)
                         .requestMatchers("/api/equipe", "/api/equipe/**").hasAnyRole(GESTAO)
                         // Supervisores consultam candidatos a equipe; cadastro e permissoes ficam com administradores.

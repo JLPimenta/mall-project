@@ -35,7 +35,7 @@ export function ItemEstoqueFormPage() {
 
   return (
     <>
-      <PageHeader title={titulo} />
+      <PageHeader voltar="/estoque" title={titulo} />
       <RegistroLoader edicao={!!id} consulta={item} naoEncontrado="Item não encontrado.">
         <ItemForm key={item.data?.id ?? 'novo'} defaultValues={paraFormulario(item.data)} somenteLeitura={!gestao} {...acoes} />
       </RegistroLoader>

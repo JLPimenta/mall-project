@@ -164,4 +164,24 @@ class ExecucaoTarefaControllerTest {
     void semSessaoRetorna401() throws Exception {
         mvc.perform(get("/api/tarefa/t1")).andExpect(status().isUnauthorized());
     }
+
+    @Test
+    void responsavelAbreChamadoParaUmItem() throws Exception {
+        when(service.abrirChamado(any(), any(), any(), any())).thenReturn(detalhe());
+
+        mvc.perform(post("/api/tarefa/t1/item/i1/chamado").with(como(Perfil.FUNCIONARIO))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"descricao\":\"Freio com folga\"}"))
+                .andExpect(status().isOk());
+
+        verify(service).abrirChamado("t1", "i1", "Freio com folga", new Ator("u-funcionario", Perfil.FUNCIONARIO));
+    }
+
+    @Test
+    void chamadoDoItemExigeDescricao() throws Exception {
+        mvc.perform(post("/api/tarefa/t1/item/i1/chamado").with(como(Perfil.FUNCIONARIO))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"descricao\":\" \"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[?(@.field == 'descricao')].message").value("Descreva o problema."));
+        verifyNoInteractions(service);
+    }
 }

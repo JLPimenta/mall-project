@@ -25,4 +25,6 @@
     <include file="db/changes/ausencia/20261117-2-seed-ausencia.sql" context="dev"/>
     <include file="db/changes/estoque/20261118-1-cria-estoque.sql"/>
     <include file="db/changes/estoque/20261118-2-seed-estoque.sql" context="dev"/>
+    <include file="db/changes/tarefa/20261119-1-nao-conformidade.sql"/>
+    <include file="db/changes/piso/20261120-1-planta-piso.sql"/>
 </databaseChangeLog>

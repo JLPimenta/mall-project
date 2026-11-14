@@ -2,11 +2,15 @@ package com.smartmall.ops.api.controller.chamado;
 
 import com.smartmall.ops.api.config.security.UsuarioAutenticado;
 import com.smartmall.ops.domain.entity.enums.StatusChamado;
+import com.smartmall.ops.domain.model.chamado.AbrirChamadoRequest;
 import com.smartmall.ops.domain.model.chamado.AprovarChamadoRequest;
 import com.smartmall.ops.domain.model.chamado.ArquivarChamadoRequest;
+import com.smartmall.ops.domain.model.chamado.ChamadoPublicoResponse;
 import com.smartmall.ops.domain.model.chamado.ChamadoResponse;
 import com.smartmall.ops.domain.service.chamado.ChamadoService;
 import jakarta.validation.Valid;
+import java.io.IOException;
+import org.springframework.web.multipart.MultipartFile;
 import java.nio.charset.StandardCharsets;
 import org.springframework.data.domain.Page;
 import org.springframework.http.CacheControl;
@@ -29,6 +33,15 @@ public class ChamadoController {
                                         @RequestParam(defaultValue = "0") int page,
                                         @RequestParam(defaultValue = "20") int size) {
         return service.listar(status, page, size);
+    }
+
+    /** Qualquer perfil logado abre chamado (SecurityConfiguration); segue o fluxo de triagem do relato público. */
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ChamadoPublicoResponse abrir(@Valid @RequestPart("dados") AbrirChamadoRequest dados,
+                                        @RequestPart(value = "midia", required = false) MultipartFile midia,
+                                        @AuthenticationPrincipal UsuarioAutenticado usuario) throws IOException {
+        return service.abrirComMidia(dados, usuario.getId(), midia == null ? null : midia.getOriginalFilename(),
+                midia == null ? null : midia.getBytes());
     }
 
     @GetMapping("/{id}")

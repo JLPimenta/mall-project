@@ -46,6 +46,20 @@ public class TarefaItem extends BaseEntity {
     @Column(name = "RESPOSTA", length = 500)
     private String resposta;
 
+    /** Cópia de ChecklistItem.respostaEsperada (só SIM_NAO). */
+    @Column(name = "RESPOSTA_ESPERADA", length = 3)
+    private String respostaEsperada;
+
+    /** Chamado aberto para este item (não conformidade ou problema relatado na execução). */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "CHAMADO_ID")
+    private Chamado chamado;
+
+    /** Respondido diferente do esperado (só itens Sim/Não com resposta esperada). */
+    public boolean naoConforme() {
+        return tipoResposta == TipoResposta.SIM_NAO && respostaEsperada != null && resposta != null && !resposta.equals(respostaEsperada);
+    }
+
     public static TarefaItem copiaDe(ChecklistItem modelo, Tarefa tarefa) {
         var item = new TarefaItem();
         item.tarefa = tarefa;
@@ -54,6 +68,7 @@ public class TarefaItem extends BaseEntity {
         item.tipoResposta = modelo.getTipoResposta();
         item.obrigatorio = modelo.getObrigatorio();
         item.maxCaracteres = modelo.getMaxCaracteres();
+        item.respostaEsperada = modelo.getRespostaEsperada();
         return item;
     }
 }

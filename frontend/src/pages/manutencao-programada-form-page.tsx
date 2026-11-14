@@ -27,7 +27,7 @@ export function ManutencaoProgramadaFormPage() {
 
   return (
     <>
-      <PageHeader title={titulo} actions={encerrada && <StatusBadge tom="neutro">Encerrada</StatusBadge>} />
+      <PageHeader voltar="/planejamento/manutencoes-programadas" title={titulo} actions={encerrada && <StatusBadge tom="neutro">Encerrada</StatusBadge>} />
       <RegistroLoader edicao={!!id} consulta={programada} naoEncontrado="Manutenção programada não encontrada.">
         {/* Em edição, as próximas tarefas ocupam a coluna da direita em telas largas. */}
         <div className={id ? 'grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]' : undefined}>

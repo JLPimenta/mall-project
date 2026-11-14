@@ -1,12 +1,13 @@
-import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react'
+import { ChevronLeftIcon, ChevronRightIcon, UserRoundIcon } from 'lucide-react'
 import { BotaoNovo } from '@/components/shared/botao-novo'
 import { ErrorState } from '@/components/shared/error-state'
-import { BarraFiltros, FiltroSelect } from '@/components/shared/filtros'
+import { BarraFiltros, FiltroAlternar, FiltroSelect } from '@/components/shared/filtros'
 import { PageHeader } from '@/components/shared/page-header'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useSessao } from '@/features/auth/hooks'
 import { temPerfil } from '@/features/auth/permissoes'
+import { BotaoAbrirChamado } from '@/features/chamados/components/botao-abrir-chamado'
 import { useEquipes } from '@/features/equipes/hooks'
 import { CalendarioMes } from '@/features/tarefas/components/calendario-mes'
 import { DiaPainel } from '@/features/tarefas/components/dia-painel'
@@ -21,7 +22,7 @@ import { useFiltrosUrl } from '@/lib/filtros'
 import { useAgora } from '@/lib/use-agora'
 
 /** Dia, filtros e visualização ficam na URL: voltar de uma manutenção programada reabre Tarefas no mesmo ponto. */
-const PARAMETROS = ['dia', 'equipe', 'situacao', 'visao'] as const
+const PARAMETROS = ['dia', 'equipe', 'situacao', 'visao', 'minhas'] as const
 
 export function TarefasPage() {
   const { data: usuario } = useSessao()
@@ -29,7 +30,10 @@ export function TarefasPage() {
   const hoje = useAgora()
   const parametros = useFiltrosUrl(PARAMETROS)
   const { dia, equipe, situacao } = parametros.valores
-  const visao: Visao = parametros.valores.visao === 'kanban' ? 'kanban' : 'calendario'
+  // Kanban é o padrão e não aparece na URL.
+  const visao: Visao = parametros.valores.visao === 'calendario' ? 'calendario' : 'kanban'
+  // Minhas tarefas: aquelas em que o usuário é o responsável.
+  const minhas = parametros.valores.minhas === '1'
 
   const selecionado = /^\d{4}-\d{2}-\d{2}$/.test(dia) ? deIsoData(dia) : hoje
   const selecionar = (data: Date) => parametros.definir('dia', mesmoDia(data, hoje) ? '' : paraIsoData(data))
@@ -45,19 +49,19 @@ export function TarefasPage() {
   const equipes = useEquipes(gestao)
 
   const mudarMes = (delta: number) => selecionar(new Date(mes.getFullYear(), mes.getMonth() + delta, 1))
-  const tarefas = consulta.data ?? []
+  const tarefas = (consulta.data ?? []).filter((t) => !minhas || t.responsavel?.id === usuario?.id)
   const doDia = tarefas.filter((t) => mesmoDia(new Date(t.dataHoraPrevista), selecionado))
   const doMes = tarefas.filter((t) => new Date(t.dataHoraPrevista).getMonth() === mes.getMonth())
-  const filtrosAtivos = (equipe ? 1 : 0) + (situacao ? 1 : 0)
+  const filtrosAtivos = (equipe ? 1 : 0) + (situacao ? 1 : 0) + (minhas ? 1 : 0)
 
   return (
     <>
-      <PageHeader
+      <PageHeader voltar="/"
         title="Tarefas"
         actions={
           <>
-            {/* Calendário é o padrão e não aparece na URL. */}
-            <VisaoTarefas valor={visao} onChange={(v) => parametros.definir('visao', v === 'kanban' ? v : '')} />
+            <VisaoTarefas valor={visao} onChange={(v) => parametros.definir('visao', v === 'calendario' ? v : '')} />
+            <BotaoAbrirChamado />
             {gestao && <BotaoNovo para="/planejamento/manutencoes-programadas/nova">Programar manutenção</BotaoNovo>}
           </>
         }
@@ -83,7 +87,13 @@ export function TarefasPage() {
 
         <div className="ml-auto">
           {/* Limpa só os filtros; o dia selecionado continua. */}
-          <BarraFiltros ativos={filtrosAtivos} onLimpar={() => parametros.limpar(['equipe', 'situacao'])}>
+          <BarraFiltros ativos={filtrosAtivos} onLimpar={() => parametros.limpar(['equipe', 'situacao', 'minhas'])}>
+            <FiltroAlternar
+              label="Minhas tarefas"
+              icone={<UserRoundIcon aria-hidden />}
+              ativo={minhas}
+              onChange={(ativo) => parametros.definir('minhas', ativo ? '1' : '')}
+            />
             {gestao && (
               <FiltroSelect
                 id="filtro-equipe"

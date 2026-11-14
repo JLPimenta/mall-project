@@ -27,7 +27,7 @@ export function ProximasTarefas({ manutencaoProgramadaId }: { manutencaoPrograma
         {/* Da manutenção programada para Tarefas, já no dia da próxima. */}
         {proximas[0] && (
           <Button asChild variant="link" size="sm" className="h-auto px-0">
-            <Link to={`/tarefas?dia=${proximas[0].dataHoraPrevista.slice(0, 10)}`}>
+            <Link to={`/tarefas?visao=calendario&dia=${proximas[0].dataHoraPrevista.slice(0, 10)}`}>
               <CalendarDaysIcon aria-hidden />
               Ver em Tarefas
             </Link>

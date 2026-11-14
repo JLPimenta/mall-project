@@ -123,6 +123,7 @@ AGENDADA ──assumir──► EM_EXECUCAO ──enviar──► EM_ANALISE ─
 
 - **Histórico (RNF06):** assumir, enviar, aprovar, reprovar, cancelar e restaurar gravam ação, usuário, data e hora, status resultante e observação ou motivo. Cada envio é numerado e liga as evidências daquele envio.
 - **Acesso:** o Funcionário só vê tarefas das suas equipes. A fila Em análise, aprovar e reprovar são só de Administrador e Supervisor (`SecurityConfiguration`).
+- **Não conformidade:** no modelo de checklist, cada item Sim/Não define a resposta esperada (Sim, Não ou Qualquer). Na execução, resposta diferente marca o item como não conforme e exige abrir um chamado antes de enviar para análise. Itens de texto e número têm a opção "Abrir chamado". O chamado leva a tarefa de origem, quem abriu e o local da tarefa, e segue o fluxo de Chamados (triagem por regras e decisão da gestão). Um chamado por item.
 - **Imagens:** ficam no PostgreSQL (tabela `arquivo`, separada dos metadados), sem volume ou serviço extra para subir o ambiente.
 - **Exclusão:** manutenção programada com tarefa executada não pode ser excluída, para preservar o histórico; ela deve ser encerrada. A única exceção é a limpeza dos testes E2E (`/api/teste/e2e`, perfil `dev`).
 

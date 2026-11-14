@@ -8,6 +8,7 @@ const itemSchema = z
     tipoResposta: z.enum(['SIM_NAO', 'TEXTO', 'NUMERO'], { error: 'Selecione o tipo.' }),
     obrigatorio: z.boolean(),
     maxCaracteres: z.number().int().max(MAX_CARACTERES_TEXTO).optional(),
+    respostaEsperada: z.enum(['SIM', 'NAO']).optional(),
   })
   .superRefine((item, ctx) => {
     if (item.tipoResposta !== 'TEXTO') return
@@ -26,7 +27,7 @@ export type ChecklistForm = z.infer<typeof checklistSchema>
 export type ChecklistItemForm = ChecklistForm['itens'][number]
 
 export function novoItem(): ChecklistItemForm {
-  return { pergunta: '', tipoResposta: 'SIM_NAO', obrigatorio: true, maxCaracteres: undefined }
+  return { pergunta: '', tipoResposta: 'SIM_NAO', obrigatorio: true, maxCaracteres: undefined, respostaEsperada: 'SIM' }
 }
 
 export function paraFormulario(checklist?: Checklist): ChecklistForm {
@@ -38,6 +39,7 @@ export function paraFormulario(checklist?: Checklist): ChecklistForm {
       tipoResposta: item.tipoResposta,
       obrigatorio: item.obrigatorio,
       maxCaracteres: item.maxCaracteres ?? undefined,
+      respostaEsperada: item.respostaEsperada ?? undefined,
     })),
   }
 }
@@ -48,6 +50,7 @@ export function paraRequisicao(form: ChecklistForm): ChecklistRequest {
     itens: form.itens.map((item) => ({
       ...item,
       maxCaracteres: item.tipoResposta === 'TEXTO' ? item.maxCaracteres : undefined,
+      respostaEsperada: item.tipoResposta === 'SIM_NAO' ? item.respostaEsperada : undefined,
     })),
   }
 }

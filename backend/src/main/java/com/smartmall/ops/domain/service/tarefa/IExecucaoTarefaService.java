@@ -24,6 +24,9 @@ public interface IExecucaoTarefaService {
 
     TarefaDetalheResponse adicionarEvidencia(String id, String nomeArquivo, byte[] conteudo, Ator ator);
 
+    /** Abre chamado para um item do checklist (não conformidade ou problema encontrado). */
+    TarefaDetalheResponse abrirChamado(String id, String itemId, String descricao, Ator ator);
+
     TarefaDetalheResponse removerEvidencia(String id, String evidenciaId, Ator ator);
 
     ArquivoEvidencia arquivo(String id, String evidenciaId, Ator ator);

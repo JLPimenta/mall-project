@@ -14,4 +14,8 @@ public interface EquipamentoRepository extends BaseRepository<Equipamento> {
     boolean existeCodigo(String codigo, String id);
 
     long countByCondicao(CondicaoEquipamento condicao);
+
+    java.util.List<Equipamento> findByPisoIdOrderByCodigoAsc(String pisoId);
+
+    boolean existsByPisoId(String pisoId);
 }

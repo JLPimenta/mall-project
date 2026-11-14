@@ -5,6 +5,8 @@ import { RequireAuth } from '@/features/auth/components/require-auth'
 import { RequirePerfil } from '@/features/auth/components/require-perfil'
 import { EmAnalisePage } from '@/pages/em-analise-page'
 import { TarefaPage } from '@/pages/tarefa-page'
+import { PisoFormPage } from '@/pages/piso-form-page'
+import { PisosPage } from '@/pages/pisos-page'
 import { TarefasPage } from '@/pages/tarefas-page'
 import { CentralPage } from '@/pages/central-page'
 import { ChecklistFormPage } from '@/pages/checklist-form-page'
@@ -74,6 +76,7 @@ export const router = createBrowserRouter([
       cadastro('/estoque', <EstoquePage />, <ItemEstoqueFormPage />),
       cadastro('/planejamento/manutencoes-programadas', <ManutencoesProgramadasPage />, <ManutencaoProgramadaFormPage />, 'nova'),
       cadastro('/planejamento/modelos-checklist', <ChecklistsPage />, <ChecklistFormPage />),
+      cadastro('/cadastros/pisos', <PisosPage />, <PisoFormPage />),
       cadastro('/cadastros/equipamentos', <EquipamentosPage />, <EquipamentoFormPage />),
       cadastro('/cadastros/equipes', <EquipesPage />, <EquipeFormPage />, 'nova'),
       cadastro('/cadastros/usuarios', <UsuariosPage />, <UsuarioFormPage />),

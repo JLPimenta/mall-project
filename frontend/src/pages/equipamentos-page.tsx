@@ -35,7 +35,7 @@ export function EquipamentosPage() {
 
   return (
     <>
-      <PageHeader title="Equipamentos" actions={temCadastro && novo} />
+      <PageHeader voltar="/" title="Equipamentos" actions={temCadastro && novo} />
       {temCadastro && (
         <BarraFiltros ativos={filtros.ativos} onLimpar={() => filtros.limpar()}>
           <FiltroTexto id="filtro-codigo" label="Código" valor={f.codigo} onChange={(v) => filtros.definir('codigo', v)} className="sm:w-32" />

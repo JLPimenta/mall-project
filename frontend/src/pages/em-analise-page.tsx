@@ -12,7 +12,7 @@ export function EmAnalisePage() {
 
   return (
     <>
-      <PageHeader title="Análise de Tarefas" />
+      <PageHeader voltar="/" title="Análise de Tarefas" />
       {isPending && <Skeleton className="h-48 w-full max-w-6xl" />}
       {isError && <ErrorState onRetry={() => refetch()} />}
       {tarefas?.length === 0 && <EmptyState title="Nenhuma tarefa em análise" icon={ClipboardCheckIcon} />}

@@ -46,6 +46,14 @@ public class Chamado extends BaseEntity {
     private Equipe equipeConfirmada;
     @Column(name = "MOTIVO_ARQUIVAMENTO", length = 500)
     private String motivoArquivamento;
+    /** Usuário logado que abriu o chamado (Tarefas ou checklist). Nulo nos relatos públicos. */
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "ABERTO_POR_ID")
+    private Usuario abertoPor;
+    /** Tarefa em cuja execução o chamado foi aberto. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "TAREFA_ORIGEM_ID")
+    private Tarefa tarefaOrigem;
     @OneToOne(mappedBy = "chamado", fetch = FetchType.LAZY)
     private ChamadoMidia midia;
     @OneToOne(mappedBy = "chamado", fetch = FetchType.LAZY)

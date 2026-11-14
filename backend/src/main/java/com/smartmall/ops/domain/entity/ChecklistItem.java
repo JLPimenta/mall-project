@@ -43,4 +43,8 @@ public class ChecklistItem extends BaseEntity {
     /** Só para TEXTO (1 a 500). Nulo nos demais tipos. */
     @Column(name = "MAX_CARACTERES")
     private Integer maxCaracteres;
+
+    /** Só para SIM_NAO: "SIM" ou "NAO". Resposta diferente é não conformidade e exige chamado. Nulo = sem regra. */
+    @Column(name = "RESPOSTA_ESPERADA", length = 3)
+    private String respostaEsperada;
 }

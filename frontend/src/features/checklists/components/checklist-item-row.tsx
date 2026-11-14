@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { cn } from '@/lib/utils'
 import { LIMITE } from '../limites'
 import type { ChecklistForm } from '../schemas'
-import { MAX_CARACTERES_TEXTO, tiposResposta, type TipoResposta } from '../types'
+import { MAX_CARACTERES_TEXTO, respostasEsperadas, tiposResposta, type TipoResposta } from '../types'
 import { AREA, ITEM_GRID } from './item-grid'
 
 type ChecklistItemRowProps = {
@@ -42,6 +42,9 @@ export function ChecklistItemRow({ chave, index, total, onMove, onRemove, onEnte
     onChange(valor)
     if (valor === 'TEXTO' && !getValues(`itens.${index}.maxCaracteres`)) {
       setValue(`itens.${index}.maxCaracteres`, MAX_CARACTERES_TEXTO, { shouldValidate: formState.isSubmitted })
+    }
+    if (valor === 'SIM_NAO' && !getValues(`itens.${index}.respostaEsperada`)) {
+      setValue(`itens.${index}.respostaEsperada`, 'SIM')
     }
   }
 
@@ -145,6 +148,31 @@ export function ChecklistItemRow({ chave, index, total, onMove, onRemove, onEnte
               {...register(`itens.${index}.maxCaracteres`, { setValueAs: (v) => (v === '' || v === null ? undefined : Number(v)) })}
             />
             <FieldError errors={[erros?.maxCaracteres]} />
+          </Field>
+        ) : tipo === 'SIM_NAO' ? (
+          // Resposta diferente da esperada é não conformidade: na execução, exige abrir chamado.
+          <Field className={cn(AREA.max, 'gap-1.5')}>
+            <FieldLabel htmlFor={id('esperada')} className={ROTULO}>
+              Resposta esperada
+            </FieldLabel>
+            <Controller
+              control={control}
+              name={`itens.${index}.respostaEsperada`}
+              render={({ field }) => (
+                <Select value={field.value ?? 'QUALQUER'} onValueChange={(v) => field.onChange(v === 'QUALQUER' ? undefined : v)}>
+                  <SelectTrigger id={id('esperada')} className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {respostasEsperadas.map((r) => (
+                      <SelectItem key={r.valor} value={r.valor}>
+                        {r.rotulo}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
           </Field>
         ) : (
           <span aria-hidden className={cn(AREA.max, 'hidden h-8 items-center justify-center text-muted-foreground md:flex')}>

@@ -31,6 +31,8 @@ test.describe('Todo campo tem limite', () => {
 
   for (const tela of [
     '/cadastros/equipamentos/novo',
+    '/cadastros/pisos/novo',
+    '/cadastros/pisos',
     '/cadastros/equipes/nova',
     '/planejamento/manutencoes-programadas/nova',
     '/tarefas',

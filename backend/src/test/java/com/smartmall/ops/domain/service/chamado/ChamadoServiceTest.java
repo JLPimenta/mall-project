@@ -152,6 +152,25 @@ class ChamadoServiceTest {
         verifyNoInteractions(midias, tarefas, planos);
     }
 
+    @Test void chamadoInternoGuardaAFotoEValidaOFormatoAntesDeGravar() {
+        var usuario = new com.smartmall.ops.domain.entity.Usuario(); usuario.setId("u1");
+        when(usuarios.getReferenceById("u1")).thenReturn(usuario);
+        when(chamados.saveAndFlush(any())).thenAnswer(i -> { Chamado c=i.getArgument(0); c.setId("c9"); return c; });
+        var request = new AbrirChamadoRequest("Piso L1", "Lâmpada queimada");
+        byte[] png = new byte[]{(byte)137,80,78,71,13,10,26,10,1,2};
+
+        var resposta = service.abrirComMidia(request, "u1", "foto.png", png);
+
+        assertThat(resposta.status()).isEqualTo(StatusChamado.EM_ANALISE);
+        var captor = ArgumentCaptor.forClass(ChamadoMidia.class);
+        verify(midias).save(captor.capture());
+        assertThat(captor.getValue().getTipo()).isEqualTo("image/png");
+
+        assertThatThrownBy(() -> service.abrirComMidia(request, "u1", "doc.pdf", "%PDF-1.7".getBytes()))
+                .hasMessage("Envie uma foto JPG, PNG, WebP ou vídeo MP4, MOV.");
+        verify(chamados, times(1)).saveAndFlush(any());
+    }
+
     @Test void fotoPngValidaFicaEmArquivoPrivado() {
         var local = new LocalQr(); local.setCodigo("banheiro-norte");
         when(locais.findByCodigoAndAtivoTrue("banheiro-norte")).thenReturn(Optional.of(local));
@@ -173,5 +192,29 @@ class ChamadoServiceTest {
         assertThatThrownBy(() -> service.registrar(dados(), null, null))
                 .isInstanceOf(DomainException.class).hasMessageContaining("outro relato");
         verify(chamados, never()).saveAndFlush(any());
+    }
+
+    @Test void chamadoInternoRegistraQuemAbriuATarefaDeOrigemESegueParaTriagem() {
+        var usuario = new com.smartmall.ops.domain.entity.Usuario(); usuario.setId("u1");
+        when(usuarios.getReferenceById("u1")).thenReturn(usuario);
+        when(chamados.saveAndFlush(any())).thenAnswer(i -> { Chamado c=i.getArgument(0); c.setId("c9"); return c; });
+        var origem = new com.smartmall.ops.domain.entity.Tarefa(); origem.setId("t1");
+
+        var chamado = service.abrir("  Vazamento na casa de bombas  ", "Piso L1 · Casa de bombas", "u1", origem);
+
+        assertThat(chamado.getStatus()).isEqualTo(StatusChamado.EM_ANALISE);
+        assertThat(chamado.getDescricao()).isEqualTo("Vazamento na casa de bombas");
+        assertThat(chamado.getAbertoPor()).isSameAs(usuario);
+        assertThat(chamado.getTarefaOrigem()).isSameAs(origem);
+        assertThat(chamado.getContato()).isNull();
+        assertThat(chamado.getTipoSugerido()).isEqualTo(TipoChamado.MANUTENCAO);
+        verify(historicos, times(2)).save(any());
+        verifyNoInteractions(planos, tarefas);
+    }
+
+    @Test void chamadoInternoExigeDescricaoELocal() {
+        assertThatThrownBy(() -> service.abrir(" ", "Piso L1", "u1", null)).hasMessage("Descreva o problema.");
+        assertThatThrownBy(() -> service.abrir("Lâmpada queimada", null, "u1", null)).hasMessage("Informe o local.");
+        verifyNoInteractions(chamados);
     }
 }

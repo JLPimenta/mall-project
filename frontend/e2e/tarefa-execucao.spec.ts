@@ -48,7 +48,7 @@ async function responderObrigatorios(page: Page) {
   for (const pergunta of ['Sistema de tração inspecionado?', 'Cabos e freios em condição normal?', 'Portas e sensores funcionando?']) {
     await form.getByRole('group', { name: pergunta, exact: false }).getByText('Sim', { exact: true }).click()
   }
-  await form.getByLabel('Desnível na parada (mm)').fill('2.5')
+  await form.getByRole('spinbutton', { name: 'Desnível na parada (mm)' }).fill('2.5')
 }
 
 test.describe('Execução pelo responsável', () => {
@@ -57,7 +57,7 @@ test.describe('Execução pelo responsável', () => {
   })
 
   test('assume pela tela Tarefas, preenche o checklist, anexa evidência e envia para análise', async ({ page }) => {
-    await page.goto(`/tarefas?dia=${t.dia}`)
+    await page.goto(`/tarefas?visao=calendario&dia=${t.dia}`)
     // Testes em paralelo podem cair no mesmo dia: o item certo é o que leva a esta tarefa.
     const item = page.getByRole('listitem').filter({ has: page.locator(`a[href="/tarefas/${t.tarefaId}"]`) })
     await expect(item.getByRole('link', { name: new RegExp(`^Abrir tarefa de ${t.titulo}`) })).toBeVisible()

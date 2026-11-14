@@ -77,7 +77,7 @@ export function ChecklistItensEditor() {
           <span className={cn(AREA.numero, 'text-center')}>#</span>
           <span className={AREA.pergunta}>Pergunta</span>
           <span className={AREA.tipo}>Tipo de resposta</span>
-          <span className={cn(AREA.max, 'text-center')}>Máx. caracteres</span>
+          <span className={cn(AREA.max, 'text-center')}>Esperado / máx.</span>
           <span className={cn(AREA.obrigatorio, 'text-center')}>Obrigatório</span>
           <span className={AREA.acoes} />
         </div>

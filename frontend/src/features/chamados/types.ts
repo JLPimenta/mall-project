@@ -50,7 +50,17 @@ export type Chamado = {
   tarefaId: string | null
   motivoArquivamento: string | null
   historico: { acao: string; usuarioId: string | null; dataHora: string; statusResultante: StatusChamado; detalhe: string | null }[]
+  /** Usuário logado que abriu (Tarefas ou checklist); nulo nos relatos públicos. */
+  abertoPor: string | null
+  /** Tarefa em cuja execução o chamado foi aberto. */
+  tarefaOrigemId: string | null
 }
+
+/** Espelha AbrirChamadoRequest (POST /api/chamado). */
+export type AbrirChamadoRequest = { localInformado: string; descricao: string }
+
+/** Espelha ChamadoPublicoResponse. */
+export type ChamadoAberto = { id: string; protocolo: string; status: StatusChamado }
 
 export type AprovarChamadoRequest = {
   tipo: TipoChamado
@@ -66,4 +76,12 @@ export type ArquivarChamadoRequest = { motivo: string }
 
 export function localChamado(chamado: Chamado) {
   return chamado.localInformado || chamado.localQrNome || chamado.localQrCodigo || 'Não informado'
+}
+
+/** Tom da prioridade (marcadores da Central e selos). */
+export const tomPrioridade: Record<PrioridadeChamado, Tom> = {
+  CRITICA: 'perigo',
+  ALTA: 'atencao',
+  MEDIA: 'info',
+  BAIXA: 'neutro',
 }

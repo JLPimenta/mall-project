@@ -9,7 +9,9 @@ public record ChamadoResponse(String id, String protocolo, StatusChamado status,
                               TipoChamado tipoSugerido, PrioridadeChamado prioridadeSugerida, String equipeSugeridaId,
                               TipoChamado tipoConfirmado, PrioridadeChamado prioridadeConfirmada, String equipeConfirmadaId,
                               LocalDateTime criadoEm, Midia midia, String tarefaId, String motivoArquivamento,
-                              List<Historico> historico) {
+                              List<Historico> historico,
+                              /* Quem abriu (usuário logado); nulo nos relatos públicos. */ String abertoPor,
+                              /* Tarefa em cuja execução o chamado foi aberto. */ String tarefaOrigemId) {
     public record Midia(String id, String nome, String tipo, Integer tamanhoBytes) { }
     public record Historico(String acao, String usuarioId, LocalDateTime dataHora,
                             StatusChamado statusResultante, String detalhe) { }

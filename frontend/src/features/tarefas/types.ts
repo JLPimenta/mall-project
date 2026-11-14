@@ -99,6 +99,12 @@ export type ItemTarefa = {
   maxCaracteres: number | null
   /** SIM_NAO: "SIM"/"NAO"; NUMERO: número com ponto; TEXTO: texto. */
   resposta: string | null
+  /** Só Sim/Não: resposta esperada; outra resposta é não conformidade (exige chamado para enviar). */
+  respostaEsperada: 'SIM' | 'NAO' | null
+  /** Pela resposta salva. */
+  naoConforme: boolean
+  /** Chamado aberto a partir do item: id e protocolo (em `nome`). */
+  chamado: Resumo | null
 }
 
 export type Evidencia = {

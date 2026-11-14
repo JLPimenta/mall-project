@@ -26,7 +26,7 @@ export function ChecklistsPage() {
 
   return (
     <>
-      <PageHeader title="Modelos de checklist" actions={temCadastro && novo} />
+      <PageHeader voltar="/" title="Modelos de checklist" actions={temCadastro && novo} />
       {temCadastro && (
         <BarraFiltros ativos={filtros.ativos} onLimpar={() => filtros.limpar()}>
           <FiltroTexto id="filtro-nome" label="Nome" valor={filtros.valores.nome} onChange={(v) => filtros.definir('nome', v)} className="sm:w-64" />

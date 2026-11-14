@@ -91,3 +91,21 @@ export function FiltroData({ id, label, valor, onChange, min, max }: FiltroDataP
     </div>
   )
 }
+
+type FiltroAlternarProps = { label: string; ativo: boolean; onChange: (ativo: boolean) => void; icone?: ReactNode }
+
+/** Filtro liga/desliga (ex.: "Minhas tarefas"). aria-pressed informa o estado aos leitores de tela. */
+export function FiltroAlternar({ label, ativo, onChange, icone }: FiltroAlternarProps) {
+  return (
+    <Button
+      type="button"
+      variant="outline"
+      aria-pressed={ativo}
+      onClick={() => onChange(!ativo)}
+      className={cn(ativo && 'border-primary bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary')}
+    >
+      {icone}
+      {label}
+    </Button>
+  )
+}

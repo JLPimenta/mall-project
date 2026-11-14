@@ -20,7 +20,7 @@ export function ChecklistFormPage() {
 
   return (
     <>
-      <PageHeader title={id ? 'Editar modelo de checklist' : 'Novo modelo de checklist'} />
+      <PageHeader voltar="/planejamento/modelos-checklist" title={id ? 'Editar modelo de checklist' : 'Novo modelo de checklist'} />
       <RegistroLoader edicao={!!id} consulta={checklist} naoEncontrado="Modelo de checklist não encontrado.">
         <ChecklistForm key={checklist.data?.id ?? 'novo'} defaultValues={paraFormulario(checklist.data)} {...acoes} />
       </RegistroLoader>

@@ -19,4 +19,5 @@ public class ChecklistItemResponse {
     private TipoResposta tipoResposta;
     private Boolean obrigatorio;
     private Integer maxCaracteres;
+    private String respostaEsperada;
 }

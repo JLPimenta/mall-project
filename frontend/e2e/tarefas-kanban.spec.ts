@@ -37,13 +37,10 @@ test.describe('Tarefas: Kanban (Supervisor)', () => {
     await entrar(page, contas.supervisor)
   })
 
-  test('o botão Kanban troca só a área abaixo dos filtros e o Calendário volta', async ({ page }) => {
+  test('Kanban é a visão padrão; o Calendário troca só a área abaixo dos filtros', async ({ page }) => {
     await page.goto(TAREFAS)
-    await expect(calendario(page)).toBeVisible()
 
-    await botaoVisao(page, 'Kanban').click()
-
-    await expect(page).toHaveURL(/visao=kanban/)
+    // Padrão: Kanban, sem parâmetro na URL.
     await expect(botaoVisao(page, 'Kanban')).toHaveAttribute('aria-pressed', 'true')
     await expect(calendario(page)).toHaveCount(0)
     for (const rotulo of COLUNAS) await expect(tituloColuna(page, rotulo)).toBeAttached()
@@ -55,8 +52,13 @@ test.describe('Tarefas: Kanban (Supervisor)', () => {
     await expect(page.getByRole('heading', { level: 2 }).filter({ hasText: /de \d{4}$/ })).toBeVisible()
 
     await botaoVisao(page, 'Calendário').click()
-    await expect(page).toHaveURL(new RegExp(`${TAREFAS}$`))
+    await expect(page).toHaveURL(/visao=calendario/)
     await expect(calendario(page)).toBeVisible()
+    for (const rotulo of COLUNAS) await expect(tituloColuna(page, rotulo)).toHaveCount(0)
+
+    await botaoVisao(page, 'Kanban').click()
+    await expect(page).toHaveURL(new RegExp(`${TAREFAS}$`))
+    await expect(calendario(page)).toHaveCount(0)
   })
 
   test('estrutura HTML5: um h1, um main e uma coluna por situação do fluxo', async ({ page }) => {

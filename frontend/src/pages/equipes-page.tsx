@@ -44,7 +44,7 @@ export function EquipesPage() {
 
   return (
     <>
-      <PageHeader
+      <PageHeader voltar="/"
         title="Equipes"
         actions={
           <>

@@ -4,6 +4,8 @@ import { escolher } from './support/cadastros'
 import { criarProgramadaViaApi, diaIso, excluirProgramadasMarcadas, horarioUnico, marcaUnica } from './support/programadas'
 
 const TAREFAS = '/tarefas'
+// Kanban é a visão padrão; os testes de calendário pedem a visão pela URL.
+const CALENDARIO = `${TAREFAS}?visao=calendario`
 const calendario = (page: Page) => page.locator('table').filter({ has: page.getByRole('columnheader', { name: 'Dom' }) })
 const diaSelecionado = (page: Page) => calendario(page).locator('button[aria-pressed="true"]')
 const painelDoDia = (page: Page) => page.getByRole('list', { name: 'Tarefas do dia' })
@@ -32,7 +34,7 @@ async function selecionarDia(page: Page, iso: string) {
 test.describe('Tarefas (Supervisor)', () => {
   test.beforeEach(async ({ page }) => {
     await entrar(page, contas.supervisor)
-    await page.goto(TAREFAS)
+    await page.goto(CALENDARIO)
     await expect(page.getByRole('heading', { level: 1, name: 'Tarefas' })).toBeVisible()
   })
 
@@ -118,7 +120,7 @@ test.describe('Fluxo Tarefas ↔ Manutenção programada', () => {
   test.beforeEach(async ({ page }) => entrar(page, contas.supervisor))
 
   test('Programar manutenção é a ação primária e o Cancelar volta para Tarefas', async ({ page }) => {
-    await page.goto(`${TAREFAS}?dia=${diaIso(3)}`)
+    await page.goto(`${TAREFAS}?visao=calendario&dia=${diaIso(3)}`)
     const novo = page.getByRole('link', { name: 'Programar manutenção' })
     await expect(novo).toHaveAttribute('data-variant', 'default')
 
@@ -126,25 +128,25 @@ test.describe('Fluxo Tarefas ↔ Manutenção programada', () => {
     await expect(page).toHaveURL(/\/planejamento\/manutencoes-programadas\/nova$/)
     await page.getByRole('button', { name: 'Cancelar', exact: true }).click()
 
-    await expect(page).toHaveURL(new RegExp(`${TAREFAS}\\?dia=${diaIso(3)}$`))
+    await expect(page).toHaveURL(new RegExp(`${TAREFAS}\\?visao=calendario&dia=${diaIso(3)}$`))
   })
 
   test('Limpar filtros remove equipe e situação de uma vez e mantém o dia', async ({ page }) => {
-    await page.goto(`${TAREFAS}?dia=${diaIso(3)}`)
+    await page.goto(`${TAREFAS}?visao=calendario&dia=${diaIso(3)}`)
     await escolher(page, 'Equipe', 'Hidráulica')
     await escolher(page, 'Situação', 'Atrasada')
     await expect(page).toHaveURL(/equipe=.*situacao=ATRASADA|situacao=ATRASADA.*equipe=/)
 
     await page.getByRole('search').getByRole('button', { name: 'Limpar filtros' }).click()
 
-    await expect(page).toHaveURL(new RegExp(`${TAREFAS}\\?dia=${diaIso(3)}$`))
+    await expect(page).toHaveURL(new RegExp(`${TAREFAS}\\?visao=calendario&dia=${diaIso(3)}$`))
     await expect(page.getByLabel('Equipe', { exact: true })).toHaveText('Todas')
     await expect(page.getByLabel('Situação', { exact: true })).toHaveText('Todas')
   })
 
   test('?dia abre Tarefas no dia indicado', async ({ page }) => {
     const dia = diaIso(40)
-    await page.goto(`${TAREFAS}?dia=${dia}`)
+    await page.goto(`${TAREFAS}?visao=calendario&dia=${dia}`)
 
     const rotulo = new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date(`${dia}T00:00:00`))
     await expect(diaSelecionado(page)).toHaveAttribute('aria-label', new RegExp(`^${rotulo}`))
@@ -155,7 +157,7 @@ test.describe('Fluxo Tarefas ↔ Manutenção programada', () => {
     const horario = horarioUnico()
     const id = await criarProgramadaViaApi(page, { marca, frequencia: 'UNICA', dataInicio: diaIso(2), horario })
     try {
-      await page.goto(`${TAREFAS}?dia=${diaIso(2)}`)
+      await page.goto(`${TAREFAS}?visao=calendario&dia=${diaIso(2)}`)
       const item = painelDoDia(page).getByRole('listitem').filter({ hasText: `${horario}–` })
 
       await item.getByRole('link', { name: /^Abrir a manutenção programada de BOM-B01/ }).click()
@@ -163,7 +165,7 @@ test.describe('Fluxo Tarefas ↔ Manutenção programada', () => {
       await expect(page.getByRole('heading', { level: 1, name: 'Editar manutenção programada' })).toBeVisible()
 
       await page.getByRole('button', { name: 'Cancelar', exact: true }).click()
-      await expect(page).toHaveURL(new RegExp(`${TAREFAS}\\?dia=${diaIso(2)}$`))
+      await expect(page).toHaveURL(new RegExp(`${TAREFAS}\\?visao=calendario&dia=${diaIso(2)}$`))
     } finally {
       await excluirProgramadasMarcadas(page, [marca])
     }
@@ -177,7 +179,7 @@ test.describe('Fluxo Tarefas ↔ Manutenção programada', () => {
 
       await page.getByRole('link', { name: 'Ver em Tarefas' }).click()
 
-      await expect(page).toHaveURL(new RegExp(`${TAREFAS}\\?dia=${diaIso(5)}$`))
+      await expect(page).toHaveURL(new RegExp(`${TAREFAS}\\?visao=calendario&dia=${diaIso(5)}$`))
       await expect(painelDoDia(page)).toContainText('BOM-B01')
     } finally {
       await excluirProgramadasMarcadas(page, [marca])
@@ -189,6 +191,7 @@ test.describe('Tarefas (Funcionário)', () => {
   test('vê as manutenções das suas equipes, sem filtro de equipe nem ações', async ({ page }) => {
     await entrar(page, contas.funcionario) // João Costa: Elevadores e escadas, Climatização
     await expect(page).toHaveURL(new RegExp(`${TAREFAS}$`))
+    await page.goto(CALENDARIO)
 
     await expect(page.getByLabel('Equipe', { exact: true })).toHaveCount(0)
     await expect(page.getByRole('link', { name: 'Programar manutenção' })).toHaveCount(0)
@@ -206,6 +209,7 @@ test.describe('Tarefas (Funcionário)', () => {
     await page.goto('/login')
     await preencherLogin(page, 'luana.freitas@smartmall.local', SENHA_DEMO) // Hidráulica
     await expect(page).toHaveURL(new RegExp(`${TAREFAS}$`))
+    await page.goto(CALENDARIO)
 
     const doMes = await tarefasDoMes(page)
     expect(doMes.some((m) => m.equipamento.codigo === 'ELV-E1')).toBe(false)

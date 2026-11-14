@@ -1,6 +1,7 @@
 package com.smartmall.ops.domain.service.tarefa;
 
 import com.smartmall.ops.domain.core.exception.DomainException;
+import com.smartmall.ops.domain.service.chamado.ChamadoService;
 import com.smartmall.ops.domain.service.chamado.CicloChamadoService;
 import com.smartmall.ops.domain.entity.Arquivo;
 import com.smartmall.ops.domain.entity.ChecklistItem;
@@ -50,19 +51,23 @@ public class ExecucaoTarefaService implements IExecucaoTarefaService {
     private final Clock clock;
     private final CicloChamadoService cicloChamado;
 
+    private final ChamadoService chamadoService;
+
     public ExecucaoTarefaService(TarefaRepository repository, TarefaEvidenciaRepository evidenciaRepository,
                                  UsuarioRepository usuarioRepository, Clock clock) {
-        this(repository, evidenciaRepository, usuarioRepository, clock, null);
+        this(repository, evidenciaRepository, usuarioRepository, clock, null, null);
     }
 
     @Autowired
     public ExecucaoTarefaService(TarefaRepository repository, TarefaEvidenciaRepository evidenciaRepository,
-                                 UsuarioRepository usuarioRepository, Clock clock, CicloChamadoService cicloChamado) {
+                                 UsuarioRepository usuarioRepository, Clock clock, CicloChamadoService cicloChamado,
+                                 ChamadoService chamadoService) {
         this.repository = repository;
         this.evidenciaRepository = evidenciaRepository;
         this.usuarioRepository = usuarioRepository;
         this.clock = clock;
         this.cicloChamado = cicloChamado;
+        this.chamadoService = chamadoService;
     }
 
     private LocalDateTime agora() {
@@ -139,6 +144,27 @@ public class ExecucaoTarefaService implements IExecucaoTarefaService {
         return montar(tarefa, ator);
     }
 
+    /**
+     * Abre um chamado a partir de um item do checklist (não conformidade ou problema encontrado na execução).
+     * O chamado segue o fluxo normal (triagem e decisão da gestão); o item guarda o vínculo.
+     */
+    @Override
+    @Transactional
+    public TarefaDetalheResponse abrirChamado(String id, String itemId, String descricao, Ator ator) {
+        var tarefa = paraExecutar(id, ator);
+        var item = tarefa.getItens().stream().filter(i -> i.getId().equals(itemId)).findFirst()
+                .orElseThrow(() -> new DomainException("Item do checklist não encontrado."));
+        if (item.getChamado() != null) {
+            throw new DomainException("Já há um chamado aberto para este item: %s", item.getChamado().getProtocolo());
+        }
+        var r = TarefaResponse.de(tarefa, agora());
+        var local = String.join(" · ", java.util.stream.Stream.of(r.getPiso(), r.getLocalizacao())
+                .filter(v -> v != null && !v.isBlank()).toList());
+        if (local.isBlank()) local = r.getEquipe() == null ? "Não informado" : "Equipe " + r.getEquipe().getNome();
+        item.setChamado(chamadoService.abrir(descricao, local.length() > 150 ? local.substring(0, 150) : local, ator.id(), tarefa));
+        return montar(gravar(tarefa), ator);
+    }
+
     @Override
     @Transactional
     public TarefaDetalheResponse removerEvidencia(String id, String evidenciaId, Ator ator) {
@@ -169,6 +195,9 @@ public class ExecucaoTarefaService implements IExecucaoTarefaService {
         for (TarefaItem item : tarefa.getItens()) {
             if (Boolean.TRUE.equals(item.getObrigatorio()) && item.getResposta() == null) {
                 throw new DomainException("Responda: %s", item.getPergunta());
+            }
+            if (item.naoConforme() && item.getChamado() == null) {
+                throw new DomainException("Abra um chamado para a não conformidade: %s", item.getPergunta());
             }
         }
         var pendentes = evidenciaRepository.findByTarefaIdOrderByDataCriacaoAsc(id).stream().filter(e -> e.getEnvio() == null).toList();
@@ -314,7 +343,7 @@ public class ExecucaoTarefaService implements IExecucaoTarefaService {
                 ? tarefa.checklistEfetivo().getItens().stream()
                     .sorted(Comparator.comparing(ChecklistItem::getOrdem))
                     .map(m -> new TarefaDetalheResponse.Item(m.getId(), m.getOrdem(), m.getPergunta(), m.getTipoResposta(),
-                            m.getObrigatorio(), m.getMaxCaracteres(), null))
+                            m.getObrigatorio(), m.getMaxCaracteres(), null, m.getRespostaEsperada(), false, null))
                     .toList()
                 : tarefa.getItens().stream().map(TarefaDetalheResponse.Item::de).toList();
         var acoes = TarefaDetalheResponse.Acoes.builder()

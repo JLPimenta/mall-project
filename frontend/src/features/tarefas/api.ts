@@ -19,6 +19,8 @@ export const tarefasApi = {
     dados.append('arquivo', arquivo, nome)
     return api.upload<TarefaDetalhe>(`/tarefa/${id}/evidencia`, dados)
   },
+  abrirChamadoItem: (id: string, itemId: string, descricao: string) =>
+    api.post<TarefaDetalhe>(`/tarefa/${id}/item/${itemId}/chamado`, { descricao }),
   removerEvidencia: (id: string, evidenciaId: string) => api.delete<TarefaDetalhe>(`/tarefa/${id}/evidencia/${evidenciaId}`),
 }
 

@@ -64,4 +64,42 @@ class ChamadoControllerTest {
                 .andExpect(status().isOk());
         verify(service).aprovar(eq("c1"), any(), eq("u1"));
     }
+
+    private UsuarioAutenticado funcionario() {
+        var usuario = new Usuario("Funcionário", "f@smartmall.local", "h", Perfil.FUNCIONARIO, true);
+        usuario.setId("u3");
+        var autenticado = new UsuarioAutenticado(usuario);
+        when(userDetailsService.loadUserByUsername(usuario.getEmail())).thenReturn(autenticado);
+        return autenticado;
+    }
+
+    private static org.springframework.mock.web.MockMultipartFile dados(String json) {
+        return new org.springframework.mock.web.MockMultipartFile("dados", "", MediaType.APPLICATION_JSON_VALUE,
+                json.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+    }
+
+    @Test void funcionarioAbreChamadoComoEleMesmoMasNaoConsultaAFila() throws Exception {
+        when(service.abrirComMidia(any(com.smartmall.ops.domain.model.chamado.AbrirChamadoRequest.class), eq("u3"), any(), any()))
+                .thenReturn(new com.smartmall.ops.domain.model.chamado.ChamadoPublicoResponse("c1", "CH-1", StatusChamado.EM_ANALISE));
+        var foto = new org.springframework.mock.web.MockMultipartFile("midia", "foto.png", "image/png", new byte[]{1, 2});
+
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart("/api/chamado")
+                        .file(dados("{\"localInformado\":\"Piso L1\",\"descricao\":\"Lâmpada queimada\"}")).file(foto)
+                        .with(user(funcionario())))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.protocolo").value("CH-1"));
+        verify(service).abrirComMidia(any(com.smartmall.ops.domain.model.chamado.AbrirChamadoRequest.class), eq("u3"), eq("foto.png"), org.mockito.AdditionalMatchers.aryEq(new byte[]{1, 2}));
+        mvc.perform(get("/api/chamado").with(user(funcionario()))).andExpect(status().isForbidden());
+        mvc.perform(post("/api/chamado/c1/aprovar").with(user(funcionario())).contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test void abrirChamadoValidaLimites() throws Exception {
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart("/api/chamado")
+                        .file(dados("{\"localInformado\":\"\",\"descricao\":\"" + "a".repeat(1001) + "\"}"))
+                        .with(user(funcionario())))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[?(@.field == 'descricao')].message").value("A descrição deve ter no máximo 1000 caracteres."))
+                .andExpect(jsonPath("$.errors[?(@.field == 'localInformado')].message").value("Informe o local."));
+        verifyNoInteractions(service);
+    }
 }

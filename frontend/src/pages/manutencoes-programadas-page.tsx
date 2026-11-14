@@ -52,7 +52,7 @@ export function ManutencoesProgramadasPage() {
 
   return (
     <>
-      <PageHeader title="Manutenções programadas" actions={temCadastro && nova} />
+      <PageHeader voltar="/" title="Manutenções programadas" actions={temCadastro && nova} />
       {temCadastro && (
         <BarraFiltros ativos={filtros.ativos} onLimpar={() => filtros.limpar()}>
           <FiltroSelect

@@ -153,3 +153,16 @@ test('formulário cabe na tela do celular', async ({ page }) => {
   const largura = await page.evaluate(() => ({ pagina: document.documentElement.scrollWidth, tela: window.innerWidth }))
   expect(largura.pagina).toBeLessThanOrEqual(largura.tela)
 })
+
+test('nome de arquivo longo não estica o formulário', async ({ page }) => {
+  await page.goto('/relatar')
+  const formulario = page.getByRole('form', { name: 'Relato público' })
+  const antes = (await formulario.boundingBox())!.width
+  const nome = `${'Pessoal — Microsoft_ Edge Gestor Posto e mais páginas '.repeat(4)}.png`
+  await page.locator('#relato-galeria').setInputFiles({ name: nome, mimeType: 'image/png', buffer: PNG_1X1 })
+
+  await expect(page.getByText(nome)).toBeVisible()
+  expect((await formulario.boundingBox())!.width).toBe(antes)
+  const largura = await page.evaluate(() => ({ pagina: document.documentElement.scrollWidth, tela: window.innerWidth }))
+  expect(largura.pagina).toBeLessThanOrEqual(largura.tela)
+})

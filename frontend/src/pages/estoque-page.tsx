@@ -36,7 +36,7 @@ export function EstoquePage() {
 
   return (
     <>
-      <PageHeader
+      <PageHeader voltar="/"
         title="Estoque"
         actions={
           <>

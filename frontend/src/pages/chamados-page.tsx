@@ -37,7 +37,7 @@ export function ChamadosPage() {
 
   return (
     <>
-      <PageHeader title="Chamados externos" />
+      <PageHeader voltar="/" title="Chamados" />
       <p className="text-sm text-muted-foreground">Relatos enviados por QR Code aguardam avaliação antes de gerar tarefas.</p>
       <BarraFiltros ativos={filtros.ativos} onLimpar={() => filtros.limpar()}>
         <FiltroSelect id="filtro-chamado-status" label="Status" valor={filtros.valores.status} onChange={(valor) => filtros.definir('status', valor)} opcoes={statusChamado} todos="Todos" />

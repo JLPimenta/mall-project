@@ -3,6 +3,7 @@ package com.smartmall.ops.api.controller.tarefa;
 import com.smartmall.ops.api.config.security.UsuarioAutenticado;
 import com.smartmall.ops.domain.model.tarefa.Ator;
 import com.smartmall.ops.domain.model.tarefa.AvaliacaoTarefaRequest;
+import com.smartmall.ops.domain.model.tarefa.ChamadoItemRequest;
 import com.smartmall.ops.domain.model.tarefa.ExecucaoTarefaRequest;
 import com.smartmall.ops.domain.model.tarefa.TarefaDetalheResponse;
 import com.smartmall.ops.domain.model.tarefa.TarefaResponse;
@@ -78,6 +79,14 @@ public class ExecucaoTarefaController {
     public TarefaDetalheResponse adicionarEvidencia(@PathVariable String id, @RequestParam("arquivo") MultipartFile arquivo,
                                                     @AuthenticationPrincipal UsuarioAutenticado usuario) throws IOException {
         return service.adicionarEvidencia(id, arquivo.getOriginalFilename(), arquivo.getBytes(), ator(usuario));
+    }
+
+    @PostMapping(value = "/{id}/item/{itemId}/chamado", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(description = "Abre um chamado para um item do checklist (não conformidade ou problema encontrado). Só o responsável, em execução.")
+    public TarefaDetalheResponse abrirChamado(@PathVariable String id, @PathVariable String itemId,
+                                              @Valid @RequestBody ChamadoItemRequest request,
+                                              @AuthenticationPrincipal UsuarioAutenticado usuario) {
+        return service.abrirChamado(id, itemId, request.getDescricao(), ator(usuario));
     }
 
     @DeleteMapping("/{id}/evidencia/{evidenciaId}")

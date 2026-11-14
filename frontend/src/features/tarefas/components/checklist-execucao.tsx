@@ -5,9 +5,11 @@ import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 import { LIMITE } from '../limites'
 import { maxCaracteres, type ExecucaoValores } from '../schemas'
-import type { ItemTarefa } from '../types'
+import type { ItemTarefa, Tarefa } from '../types'
+import { ItemChamado } from './item-chamado'
 
-const linha = 'grid gap-1.5 px-4 py-2 md:grid-cols-[minmax(0,1fr)_minmax(0,20rem)] md:items-center md:gap-4'
+// Pergunta | resposta | chamado (não conformidade ou problema encontrado).
+const linha = 'grid gap-1.5 px-4 py-2 md:grid-cols-[minmax(0,1fr)_minmax(0,20rem)_11rem] md:items-center md:gap-4'
 
 /** Enter avança para o próximo campo, sem enviar o formulário. */
 function avancarComEnter(e: KeyboardEvent<HTMLDivElement>) {
@@ -20,7 +22,9 @@ function avancarComEnter(e: KeyboardEvent<HTMLDivElement>) {
 }
 
 /** Preenchimento do checklist da tarefa: uma linha por item (pergunta | resposta). */
-export function ChecklistExecucao({ itens }: { itens: ItemTarefa[] }) {
+type ChecklistExecucaoProps = { tarefa: Tarefa; itens: ItemTarefa[]; podeAbrirChamado: boolean }
+
+export function ChecklistExecucao({ tarefa, itens, podeAbrirChamado }: ChecklistExecucaoProps) {
   const form = useFormContext<ExecucaoValores>()
   const { errors } = form.formState
   const respostas = useWatch({ control: form.control, name: 'respostas' })
@@ -78,6 +82,7 @@ export function ChecklistExecucao({ itens }: { itens: ItemTarefa[] }) {
                     </label>
                   ))}
                 </div>
+                <ItemChamado tarefa={tarefa} item={item} resposta={respostas?.[i]?.resposta ?? ''} podeAbrirDetalhe={podeAbrirChamado} />
                 {mensagem}
                 </div>
               </fieldset>
@@ -112,6 +117,7 @@ export function ChecklistExecucao({ itens }: { itens: ItemTarefa[] }) {
                   {...form.register(nome)}
                 />
               )}
+              <ItemChamado tarefa={tarefa} item={item} resposta={respostas?.[i]?.resposta ?? ''} podeAbrirDetalhe={podeAbrirChamado} />
               {mensagem}
             </div>
           )

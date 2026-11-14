@@ -1,4 +1,4 @@
-import { ChartColumnIcon, ClipboardCheckIcon, ClipboardListIcon, ListChecksIcon, MapIcon, MessageSquareWarningIcon, PackageIcon, RepeatIcon, UsersIcon, UsersRoundIcon, WrenchIcon, type LucideIcon } from 'lucide-react'
+import { ChartColumnIcon, LayersIcon, ClipboardCheckIcon, ClipboardListIcon, ListChecksIcon, MapIcon, MessageSquareWarningIcon, PackageIcon, RepeatIcon, UsersIcon, UsersRoundIcon, WrenchIcon, type LucideIcon } from 'lucide-react'
 import { temPerfil } from '@/features/auth/permissoes'
 import type { Perfil } from '@/features/auth/types'
 
@@ -43,6 +43,7 @@ export const navGrupos: readonly NavGrupo[] = [
   {
     titulo: 'Cadastros',
     itens: [
+      { title: 'Pisos', to: '/cadastros/pisos', icon: LayersIcon, perfis: GESTAO },
       { title: 'Equipamentos', to: '/cadastros/equipamentos', icon: WrenchIcon, perfis: GESTAO },
       { title: 'Equipes', to: '/cadastros/equipes', icon: UsersIcon, perfis: GESTAO },
       { title: 'Membros e permissões', to: '/cadastros/usuarios', icon: UsersRoundIcon, perfis: ['ADMINISTRADOR'] },

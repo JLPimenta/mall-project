@@ -4,8 +4,8 @@ import { AlternarVisao, type OpcaoVisao } from '@/components/shared/alternar-vis
 export type Visao = 'calendario' | 'kanban'
 
 const OPCOES: readonly OpcaoVisao<Visao>[] = [
-  { valor: 'calendario', rotulo: 'Calendário', icone: CalendarDaysIcon },
   { valor: 'kanban', rotulo: 'Kanban', icone: SquareKanbanIcon },
+  { valor: 'calendario', rotulo: 'Calendário', icone: CalendarDaysIcon },
 ]
 
 /** Alterna a visualização das tarefas. Só a área abaixo dos filtros muda. */

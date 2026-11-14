@@ -1,8 +1,6 @@
-import { ArrowLeftIcon } from 'lucide-react'
 import { useNavigate, useParams } from 'react-router'
 import { PageHeader } from '@/components/shared/page-header'
 import { RegistroLoader } from '@/components/shared/registro-loader'
-import { Button } from '@/components/ui/button'
 import { useSessao } from '@/features/auth/hooks'
 import { temPerfil } from '@/features/auth/permissoes'
 import { AvisoReprovacao } from '@/features/tarefas/components/aviso-reprovacao'
@@ -30,27 +28,14 @@ export function TarefaPage() {
 
   return (
     <>
-      <PageHeader
-        title={titulo}
-        actions={
-          <>
-            {detalhe?.acoes.assumir && <AssumirTarefa tarefaId={id} />}
-            {!detalhe?.acoes.executar && (
-              <Button variant="outline" onClick={voltar}>
-                <ArrowLeftIcon aria-hidden />
-                Voltar
-              </Button>
-            )}
-          </>
-        }
-      />
+      <PageHeader voltar="/tarefas" title={titulo} actions={detalhe?.acoes.assumir && <AssumirTarefa tarefaId={id} />} />
       <RegistroLoader edicao consulta={consulta} naoEncontrado="Tarefa não encontrada.">
         {detalhe && (
           <div className="grid max-w-6xl gap-6">
             <TarefaResumo tarefa={detalhe.tarefa} podeGerenciar={gestao} />
             <AvisoReprovacao detalhe={detalhe} />
             {detalhe.acoes.executar ? (
-              <ExecucaoForm key={detalhe.tarefa.id} detalhe={detalhe} onCancel={voltar} />
+              <ExecucaoForm key={detalhe.tarefa.id} detalhe={detalhe} onCancel={voltar} podeAbrirChamado={gestao} />
             ) : (detalhe.itens.length > 0 || detalhe.observacao ? (
               <ChecklistRespostas itens={detalhe.itens} observacao={detalhe.observacao} />
             ) : null)}

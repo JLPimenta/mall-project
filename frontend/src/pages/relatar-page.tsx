@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { Building2Icon, CameraIcon, CheckCircle2Icon, ImagesIcon, Loader2Icon, XIcon } from 'lucide-react'
+import { Building2Icon, CheckCircle2Icon, Loader2Icon } from 'lucide-react'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { Link, useSearchParams } from 'react-router'
@@ -10,13 +10,12 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Field, FieldError, FieldLabel } from '@/components/ui/field'
 import { chamadosPublicosApi } from '@/features/chamados-publicos/api'
-import { CapturaCamera } from '@/features/chamados-publicos/components/captura-camera'
+import { CampoMidia } from '@/features/chamados-publicos/components/campo-midia'
 import { LIMITE_CHAMADO_PUBLICO as LIMITE } from '@/features/chamados-publicos/limites'
 import { chamadoPublicoSchema, type ChamadoPublicoForm } from '@/features/chamados-publicos/schemas'
 import type { ChamadoPublicoCriado } from '@/features/chamados-publicos/types'
 import { ApiError } from '@/lib/api'
 
-const FORMATOS = ['image/jpeg', 'image/png', 'image/webp', 'video/mp4', 'video/quicktime']
 
 export function RelatarPage() {
   const [params] = useSearchParams()
@@ -36,10 +35,8 @@ export function RelatarPage() {
   const [descricao, localInformado, contato] = useWatch({ control: form.control, name: ['descricao', 'localInformado', 'contato'] })
   const [midia, setMidia] = useState<File | null>(null)
   const [erroMidia, setErroMidia] = useState<string | null>(null)
-  const [cameraAberta, setCameraAberta] = useState(false)
   const [criado, setCriado] = useState<ChamadoPublicoCriado | null>(null)
   const chaveAtual = useRef<{ assinatura: string; chave: string } | null>(null)
-  const galeriaInput = useRef<HTMLInputElement>(null)
   const enviar = useMutation({ mutationFn: ({ dados, arquivo }: { dados: Parameters<typeof chamadosPublicosApi.enviar>[0]; arquivo: File | null }) => chamadosPublicosApi.enviar(dados, arquivo) })
 
   useEffect(() => {
@@ -47,24 +44,6 @@ export function RelatarPage() {
       form.setValue('localInformado', local.data.nome)
     }
   }, [local.data, form])
-
-  const selecionarMidia = (arquivo: File | null) => {
-    if (galeriaInput.current) galeriaInput.current.value = ''
-    setErroMidia(null)
-    setMidia(null)
-    if (!arquivo) return
-    if (arquivo.type && !FORMATOS.includes(arquivo.type)) {
-      setErroMidia('Use foto JPG, PNG ou WebP, ou vídeo MP4 ou MOV.')
-      return
-    }
-    const video = arquivo.type.startsWith('video/') || /\.(mp4|mov)$/i.test(arquivo.name)
-    const limite = video ? LIMITE.videoBytes : LIMITE.imagemBytes
-    if (arquivo.size > limite) {
-      setErroMidia(video ? 'O vídeo deve ter no máximo 20 MB.' : 'A foto deve ter no máximo 5 MB.')
-      return
-    }
-    setMidia(arquivo)
-  }
 
   const registrar = (evento: FormEvent<HTMLFormElement>) => form.handleSubmit(async (valores) => {
     if (erroMidia) return
@@ -91,7 +70,6 @@ export function RelatarPage() {
     form.reset({ descricao: '', localInformado: local.data?.nome ?? '', contato: '' })
     setMidia(null)
     setErroMidia(null)
-    if (galeriaInput.current) galeriaInput.current.value = ''
     chaveAtual.current = null
     enviar.reset()
     setCriado(null)
@@ -119,7 +97,7 @@ export function RelatarPage() {
         ) : (
           <section>
             <h1 className="text-2xl font-semibold tracking-tight">Relatar ocorrência</h1>
-            <form className="mt-6 grid gap-6 rounded-xl border bg-background p-4 shadow-sm sm:p-6" onSubmit={registrar} aria-label="Relato público" aria-busy={enviar.isPending}>
+            <form className="mt-6 grid grid-cols-1 gap-6 rounded-xl border bg-background p-4 shadow-sm sm:p-6" onSubmit={registrar} aria-label="Relato público" aria-busy={enviar.isPending}>
               <Field data-invalid={!!errors.localInformado}>
                 <FieldLabel htmlFor="relato-local">Local</FieldLabel>
                 <LimitedInput id="relato-local" required maxLength={LIMITE.localInformado} length={localInformado?.length ?? 0} aria-invalid={!!errors.localInformado} {...form.register('localInformado')} />
@@ -135,21 +113,7 @@ export function RelatarPage() {
                 <FieldError errors={[errors.descricao]} />
               </Field>
 
-              <Field data-invalid={!!erroMidia}>
-                <FieldLabel htmlFor="relato-galeria">Foto ou vídeo (opcional)</FieldLabel>
-                <input ref={galeriaInput} id="relato-galeria" type="file" accept="image/*,video/*" className="sr-only" onChange={(evento) => selecionarMidia(evento.target.files?.[0] ?? null)} />
-                <div className="flex flex-wrap gap-2">
-                  <Button type="button" variant="outline" onClick={() => setCameraAberta(true)}><CameraIcon aria-hidden /> Abrir câmera</Button>
-                  <Button type="button" variant="outline" onClick={() => galeriaInput.current?.click()}><ImagesIcon aria-hidden /> Escolher arquivo</Button>
-                </div>
-                {midia && (
-                  <div className="flex items-center justify-between gap-2 rounded-md bg-muted px-3 py-2 text-sm">
-                    <span className="min-w-0 truncate">{midia.name}</span>
-                    <Button type="button" size="icon-sm" variant="ghost" aria-label="Remover mídia" onClick={() => { setMidia(null); if (galeriaInput.current) galeriaInput.current.value = '' }}><XIcon aria-hidden /></Button>
-                  </div>
-                )}
-                {erroMidia && <p className="text-sm text-destructive" role="alert">{erroMidia}</p>}
-              </Field>
+              <CampoMidia id="relato-galeria" midia={midia} erro={erroMidia} onChange={(arquivo, erro) => { setMidia(arquivo); setErroMidia(erro) }} />
 
               <Field data-invalid={!!errors.contato}>
                 <FieldLabel htmlFor="relato-contato">WhatsApp ou e-mail (opcional)</FieldLabel>
@@ -168,7 +132,6 @@ export function RelatarPage() {
         )}
         <div className="mt-6 text-center text-sm"><Link className="text-muted-foreground underline underline-offset-4" to="/login">Acesso da equipe</Link></div>
       </main>
-      {cameraAberta && <CapturaCamera onFechar={() => setCameraAberta(false)} onCapturar={selecionarMidia} />}
     </div>
   )
 }

@@ -1,8 +1,10 @@
 import { CircleAlertIcon } from 'lucide-react'
-import { useEffect, useEffectEvent, useState, type ReactNode } from 'react'
+import { useEffect, useEffectEvent, useRef, useState, type ReactNode } from 'react'
 import { FormProvider, type FieldValues, type UseFormReturn } from 'react-hook-form'
+import { useBlocker } from 'react-router'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { cn } from '@/lib/utils'
+import { ConfirmDialog } from './confirm-dialog'
 import { FormActions } from './form-actions'
 
 type CadastroFormProps<T extends FieldValues> = {
@@ -27,7 +29,7 @@ type CadastroFormProps<T extends FieldValues> = {
 /**
  * Comportamento padrão de cadastro/edição (CLAUDE.md, "Telas de cadastro e edição"):
  * - Salvar persiste e permanece na tela; os valores salvos viram a nova base;
- * - Cancelar com alterações pede confirmação (FormActions);
+ * - sair com alterações (Cancelar, Voltar, menu, voltar do navegador) pede confirmação ("Descartar alterações?");
  * - data-alterado expõe o estado aos testes E2E.
  */
 export function CadastroForm<T extends FieldValues>({
@@ -44,6 +46,15 @@ export function CadastroForm<T extends FieldValues>({
   children,
 }: CadastroFormProps<T>) {
   const [salvos, setSalvos] = useState<T>()
+  const { isDirty } = form.formState
+
+  // Qualquer navegação para outra rota com alterações pendentes passa pela confirmação.
+  // O ref evita bloquear a troca para a edição logo depois de salvar (o reset ainda não renderizou).
+  const alterado = useRef(false)
+  useEffect(() => {
+    alterado.current = isDirty
+  }, [isDirty])
+  const bloqueio = useBlocker(({ currentLocation, nextLocation }) => alterado.current && currentLocation.pathname !== nextLocation.pathname)
 
   const enviar = form.handleSubmit(async (dados) => {
     const resultado = await onSubmit(dados)
@@ -56,12 +67,13 @@ export function CadastroForm<T extends FieldValues>({
   useEffect(() => {
     if (!salvos) return
     form.reset(salvos)
+    alterado.current = false
     avisarSalvo()
   }, [salvos, form])
 
   return (
     <FormProvider {...form}>
-      <form onSubmit={enviar} className={cn('grid max-w-6xl gap-6', className)} aria-label={rotulo} data-alterado={form.formState.isDirty}>
+      <form onSubmit={enviar} className={cn('grid max-w-6xl gap-6', className)} aria-label={rotulo} data-alterado={isDirty}>
         {erro && (
           <Alert variant="destructive">
             <CircleAlertIcon aria-hidden />
@@ -72,8 +84,23 @@ export function CadastroForm<T extends FieldValues>({
         <fieldset disabled={somenteLeitura} className="contents">
           {children}
         </fieldset>
-        <FormActions alterado={form.formState.isDirty} salvando={salvando} onCancel={onCancel} somenteLeitura={somenteLeitura} extra={acaoExtra} />
+        <FormActions salvando={salvando} onCancel={onCancel} somenteLeitura={somenteLeitura} extra={acaoExtra} />
       </form>
+      <ConfirmDialog
+        open={bloqueio.state === 'blocked'}
+        // Fechar o diálogo também chama onOpenChange(false) depois de "Descartar": só cancela a saída
+        // se ainda houver alteração a proteger (Descartar zera o ref antes de seguir).
+        onOpenChange={(aberto) => !aberto && alterado.current && bloqueio.state === 'blocked' && bloqueio.reset()}
+        title="Descartar alterações?"
+        description="As informações não salvas serão perdidas."
+        confirmLabel="Descartar"
+        destructive
+        onConfirm={() => {
+          if (bloqueio.state !== 'blocked') return
+          alterado.current = false
+          bloqueio.proceed()
+        }}
+      />
     </FormProvider>
   )
 }

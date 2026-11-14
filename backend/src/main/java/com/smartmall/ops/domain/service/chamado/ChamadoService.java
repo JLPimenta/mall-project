@@ -83,6 +83,53 @@ public class ChamadoService {
         }
         LocalQr local = codigo == null ? null : locais.findByCodigoAndAtivoTrue(codigo)
                 .orElseThrow(() -> new DomainException("O código do local não é válido."));
+        var chamado = novo(chave, assinatura, local, localInformado, descricao, contato);
+        chamados.saveAndFlush(chamado);
+        anexarMidia(chamado, nomeMidia, conteudo, tipoMidia);
+        triar(chamado, null);
+        return respostaPublica(chamado);
+    }
+
+    /** Foto ou vídeo do chamado, guardado em arquivo privado (só a gestão baixa). */
+    private void anexarMidia(Chamado chamado, String nomeMidia, byte[] conteudo, String tipoMidia) {
+        if (tipoMidia == null) return;
+        var midia = new ChamadoMidia();
+        midia.setChamado(chamado);
+        midia.setArquivo(new Arquivo(conteudo));
+        midia.setNome(nomeSeguro(nomeMidia));
+        midia.setTipo(tipoMidia);
+        midia.setTamanhoBytes(conteudo.length);
+        midias.save(midia);
+        chamado.setMidia(midia);
+    }
+
+    /**
+     * Chamado aberto por um usuário logado ("Abrir chamado" em Tarefas ou problema no checklist da tarefa).
+     * Segue o mesmo fluxo do relato público: triagem por regras e decisão da gestão.
+     * @param origem tarefa em cuja execução o problema foi encontrado (opcional).
+     */
+    @Transactional
+    public Chamado abrir(String descricao, String localInformado, String usuarioId, Tarefa origem) {
+        String d = obrigatorio(descricao, "Descreva o problema.", 1000);
+        String l = obrigatorio(localInformado, "Informe o local.", 150);
+        var chamado = novo(UUID.randomUUID().toString(), assinatura(d, l, null, null, null), null, l, d, null);
+        chamado.setAbertoPor(usuarios.getReferenceById(usuarioId));
+        chamado.setTarefaOrigem(origem);
+        chamados.saveAndFlush(chamado);
+        triar(chamado, usuarioId);
+        return chamado;
+    }
+
+    @Transactional
+    public ChamadoPublicoResponse abrirComMidia(AbrirChamadoRequest request, String usuarioId, String nomeMidia, byte[] conteudo) {
+        // Mesmas regras de foto e vídeo do relato público, conferidas antes de gravar o chamado.
+        var tipoMidia = validarMidia(conteudo);
+        var chamado = abrir(request.getDescricao(), request.getLocalInformado(), usuarioId, null);
+        anexarMidia(chamado, nomeMidia, conteudo, tipoMidia);
+        return respostaPublica(chamado);
+    }
+
+    private Chamado novo(String chave, String assinatura, LocalQr local, String localInformado, String descricao, String contato) {
         var sugestao = triagem.sugerir(descricao);
         var chamado = new Chamado();
         chamado.setProtocolo("CH-" + UUID.randomUUID().toString().substring(0, 12).toUpperCase(Locale.ROOT));
@@ -95,21 +142,14 @@ public class ChamadoService {
         chamado.setStatus(StatusChamado.REGISTRADA);
         chamado.setTipoSugerido(sugestao.tipo());
         chamado.setPrioridadeSugerida(sugestao.prioridade());
-        chamados.saveAndFlush(chamado);
-        if (tipoMidia != null) {
-            var midia = new ChamadoMidia();
-            midia.setChamado(chamado);
-            midia.setArquivo(new Arquivo(conteudo));
-            midia.setNome(nomeSeguro(nomeMidia));
-            midia.setTipo(tipoMidia);
-            midia.setTamanhoBytes(conteudo.length);
-            midias.save(midia);
-            chamado.setMidia(midia);
-        }
-        historico(chamado, "REGISTRADA", null, null);
+        return chamado;
+    }
+
+    /** Registro e triagem por regras: o chamado fica em análise, aguardando a decisão humana. */
+    private void triar(Chamado chamado, String usuarioId) {
+        historico(chamado, "REGISTRADA", usuarioId, null);
         chamado.setStatus(StatusChamado.EM_ANALISE);
         historico(chamado, "TRIADA", null, "Sugestão por regras, sujeita a revisão humana.");
-        return respostaPublica(chamado);
     }
 
     public Page<ChamadoResponse> listar(StatusChamado status, int page, int size) {
@@ -205,7 +245,9 @@ public class ChamadoService {
                 c.getTipoSugerido(), c.getPrioridadeSugerida(), c.getEquipeSugerida() == null ? null : c.getEquipeSugerida().getId(),
                 c.getTipoConfirmado(), c.getPrioridadeConfirmada(), c.getEquipeConfirmada() == null ? null : c.getEquipeConfirmada().getId(),
                 c.getDataCriacao(), midia == null ? null : new ChamadoResponse.Midia(midia.getId(), midia.getNome(), midia.getTipo(), midia.getTamanhoBytes()),
-                tarefaId, c.getMotivoArquivamento(), historia);
+                tarefaId, c.getMotivoArquivamento(), historia,
+                c.getAbertoPor() == null ? null : c.getAbertoPor().getNome(),
+                c.getTarefaOrigem() == null ? null : c.getTarefaOrigem().getId());
     }
 
     private static ChamadoPublicoResponse respostaPublica(Chamado c) {

@@ -33,3 +33,13 @@ export const pontoDoTom: Record<Tom, string> = {
   atencao: 'bg-warning',
   perigo: 'bg-destructive',
 }
+
+/** Marcadores em SVG (planta do piso): preenchimento no tom. */
+export const preenchimentoDoTom: Record<Tom, string> = {
+  neutro: 'fill-muted-foreground',
+  info: 'fill-primary',
+  andamento: 'fill-andamento',
+  sucesso: 'fill-success',
+  atencao: 'fill-warning',
+  perigo: 'fill-destructive',
+}

@@ -20,7 +20,7 @@ export function EquipeFormPage() {
 
   return (
     <>
-      <PageHeader title={id ? 'Editar equipe' : 'Nova equipe'} />
+      <PageHeader voltar="/cadastros/equipes" title={id ? 'Editar equipe' : 'Nova equipe'} />
       <RegistroLoader edicao={!!id} consulta={equipe} naoEncontrado="Equipe não encontrada.">
         <EquipeForm key={equipe.data?.id ?? 'nova'} defaultValues={paraFormulario(equipe.data)} {...acoes} />
       </RegistroLoader>

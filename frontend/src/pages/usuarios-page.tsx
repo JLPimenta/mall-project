@@ -46,7 +46,7 @@ export function UsuariosPage() {
 
   return (
     <>
-      <PageHeader title="Membros e permissões" actions={dados && (dados.page.totalElements > 0 || filtros.ativos > 0) ? novo : undefined} />
+      <PageHeader voltar="/" title="Membros e permissões" actions={dados && (dados.page.totalElements > 0 || filtros.ativos > 0) ? novo : undefined} />
       <BarraFiltros ativos={filtros.ativos} onLimpar={() => filtros.limpar()}>
         <FiltroTexto id="filtro-usuario-nome" label="Nome" valor={filtros.valores.nome} onChange={(valor) => filtros.definir('nome', valor)} />
         <FiltroTexto id="filtro-usuario-email" label="E-mail" valor={filtros.valores.email} onChange={(valor) => filtros.definir('email', valor)} />

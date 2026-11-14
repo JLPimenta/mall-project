@@ -26,8 +26,8 @@ export type TarefaCriada = { tarefaId: string; programadaId: string; marca: stri
  * equipe "Elevadores e escadas" (João Costa, o Funcionário da seed, é membro). Data distante, para não
  * poluir as semanas que aparecem na demonstração.
  */
-export async function criarTarefaDoJoao(admin: APIRequestContext): Promise<TarefaCriada> {
-  const dia = diaIso(100 + Math.floor(Math.random() * 15))
+/** @param dia AAAA-MM-DD; padrão: um dia sorteado entre 100 e 114 dias à frente. */
+export async function criarTarefaDoJoao(admin: APIRequestContext, dia = diaIso(100 + Math.floor(Math.random() * 15))): Promise<TarefaCriada> {
   const marca = marcaUnica()
   const programada = await admin.post('/api/manutencao-programada', {
     data: {

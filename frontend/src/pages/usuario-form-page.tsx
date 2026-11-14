@@ -20,7 +20,7 @@ export function UsuarioFormPage() {
 
   return (
     <>
-      <PageHeader title={id ? 'Editar membro e permissões' : 'Novo membro'} />
+      <PageHeader voltar="/cadastros/usuarios" title={id ? 'Editar membro e permissões' : 'Novo membro'} />
       <RegistroLoader edicao={!!id} consulta={usuario} naoEncontrado="Membro não encontrado.">
         <UsuarioForm key={usuario.data?.id ?? 'novo'} edicao={!!id} defaultValues={paraFormulario(usuario.data)} {...acoes} />
       </RegistroLoader>

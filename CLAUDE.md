@@ -5,6 +5,7 @@ MVP de gestão operacional para shopping centers (cenário: Capim Dourado Shoppi
 Referências obrigatórias antes de implementar qualquer funcionalidade:
 
 - `docs/modulo-manutencao.md` — passo a passo e regras do módulo de manutenção.
+- `docs/central-controle.md` — Central de Controle, cadastro de piso, planta em PDF e marcadores.
 - `docs/SmartMall_Ops_AI_Documentacao_Inicial.md` — requisitos (RF/RNF), telas, modelo de dados e critérios de aceite.
 - `INSTRUCTIONS.md` e `docs/dist/` — protótipo HTML5/JS existente. Serve de referência de fluxo e identidade visual, não de código a ser copiado.
 
@@ -29,10 +30,13 @@ Manutenção programada (recorrência) ────────┘
 | **Item de estoque** | Peça, ferramenta, consumível ou EPI do almoxarifado. Não confundir com **Equipamento** (ativo monitorado). Saldo só muda por movimentação | `ItemEstoque`, `/api/estoque/item`, tela `/estoque` | Implementado |
 | **Movimentação** | Entrada (só gestão) ou retirada (todos) de um item, imutável: quem, quando, quanto, saldo depois e equipamento atendido. É a rastreabilidade do item; corrigir = movimentação contrária | `MovimentacaoEstoque`, `POST /api/estoque/item/{id}/entrada` e `/retirada`, `/api/estoque/movimentacao` | Implementado |
 | **Ausência** | Período (dias inteiros) em que o funcionário não está disponível. Motivo genérico, sem texto livre (LGPD: nada de dado de saúde) | `Ausencia`, `/api/ausencia` | Implementado |
-| **Chamado** | Registro de um problema (ocorrência), com triagem | — | A implementar |
-| **Plano de ação** | Conjunto de uma ou várias tarefas geradas por um chamado | — | A implementar |
+| **Planta do piso** | PDF enviado no cadastro do piso; a página escolhida vira imagem no navegador (pdf.js) e é o fundo da visão do piso | `PlantaPiso`, `/api/piso/{id}/planta`, tela `/cadastros/pisos/{id}` | Implementado |
+| **Marcador** | Posição relativa (0 a 1) de um equipamento ou local QR sobre a planta | `MarcadorPiso`, `/api/piso/{id}/marcadores`; visão em `/api/piso/{id}/mapa` | Implementado |
+| **Chamado** | Registro de um problema, com triagem por regras e decisão da gestão. Origem: relato público (QR Code), "Abrir chamado" em Tarefas ou item do checklist na execução | `Chamado`, `/api/chamado`, `/api/publico/chamado`, tela `/chamados` | Implementado |
+| **Não conformidade** | Item Sim/Não respondido diferente da resposta esperada do modelo. Exige chamado antes de enviar a tarefa para análise; itens de texto e número podem abrir chamado se o funcionário quiser | `ChecklistItem.respostaEsperada`, `TarefaItem.chamado`, `POST /api/tarefa/{id}/item/{itemId}/chamado` | Implementado |
+| **Plano de ação** | Conjunto de uma ou várias tarefas geradas por um chamado aprovado | `PlanoAcao` | Implementado (uma tarefa por chamado) |
 
-Não usar "plano" sozinho (ambíguo com Plano de ação) nem "agenda" como nome de módulo: a tela é Tarefas, e o calendário é só uma forma de vê-las. Status da tarefa: `AGENDADA → EM_EXECUCAO → EM_ANALISE → CONCLUIDA` (reprovada volta para `EM_EXECUCAO`); `CANCELADA` à parte. Menu: **Operação** (Central de Controle, Tarefas, Em análise, Estoque), **Planejamento** (Manutenções programadas, Modelos de checklist), **Cadastros**, **Gestão** (Relatórios: `/relatorios`, `GET /api/relatorio/tarefas`, só dados agregados).
+Não usar "plano" sozinho (ambíguo com Plano de ação) nem "agenda" como nome de módulo: a tela é Tarefas (Kanban por padrão; o calendário é outra forma de vê-las, `?visao=calendario`), com o filtro "Minhas tarefas" (`?minhas=1`: responsável = usuário logado). Status da tarefa: `AGENDADA → EM_EXECUCAO → EM_ANALISE → CONCLUIDA` (reprovada volta para `EM_EXECUCAO`); `CANCELADA` à parte. Menu: **Operação** (Central de Controle, Tarefas, Em análise, Estoque), **Planejamento** (Manutenções programadas, Modelos de checklist), **Cadastros**, **Gestão** (Relatórios: `/relatorios`, `GET /api/relatorio/tarefas`, só dados agregados).
 
 ## Decisões de arquitetura
 
@@ -182,8 +186,9 @@ frontend/src
 | `AlternarVisao` | Botões de visualização da mesma tela (Calendário/Kanban, Equipes/Funcionários), com a visão na URL |
 | `Medidor` | Barra de percentual acessível (`role="meter"`), com o valor em texto |
 | `BotaoNovo` | Ação primária "Novo …" (azul), levando a origem |
+| `BotaoVoltar` | "<" ao lado do título (`PageHeader voltar="/rota"`), em toda listagem e formulário |
 | `LinhaClicavel` | Linha de tabela que abre o registro |
-| `BarraFiltros`, `FiltroTexto`, `FiltroSelect`, `FiltroData` | Filtros de listagem (estado na URL com `useFiltrosUrl`) |
+| `BarraFiltros`, `FiltroTexto`, `FiltroSelect`, `FiltroData`, `FiltroAlternar` | Filtros de listagem (estado na URL com `useFiltrosUrl`); `FiltroAlternar` liga/desliga (ex.: Minhas tarefas) |
 | `SemResultado` | Lista filtrada sem resultado, com "Limpar filtros" |
 | `PageHeader`, `EmptyState`, `ErrorState`, `SimulatedBadge` | Estrutura e estados de tela |
 
@@ -248,6 +253,7 @@ Objetivo: o usuário vê o máximo de informação útil sem rolar, sem áreas v
 
 O usuário nunca deve se perder.
 
+- **Voltar ("<"):** toda listagem e todo formulário passam `voltar` ao `PageHeader`. O botão volta no histórico do app; aberto direto pela URL, vai para a origem ou para a rota informada.
 - **Origem:** todo link para uma tela de cadastro leva a origem (`state={useOrigemAtual()}`; `BotaoNovo` e `LinhaClicavel` já levam). O Cancelar/Voltar retorna para lá (`useVoltarPara`), com filtros e dia selecionado. Sem origem (URL direta), volta para a listagem.
 - **Telas do mesmo fluxo se ligam nos dois sentidos.** Na manutenção:
   - em Tarefas, a origem da tarefa ("Manutenção programada") abre a manutenção programada;
@@ -260,6 +266,7 @@ O usuário nunca deve se perder.
 
 Toda tela de cadastro ou edição segue este comportamento:
 
+- **Sair com alterações** (Cancelar, "<", menu ou voltar do navegador): o `CadastroForm` bloqueia a navegação (`useBlocker`) e pede confirmação. Não criar diálogo de descarte próprio.
 - **Cancelar com alterações:** se algum campo foi preenchido ou alterado (`formState.isDirty`, o que inclui adicionar, remover e reordenar itens), Cancelar abre um diálogo com o título "Descartar alterações?", o aviso "As informações não salvas serão perdidas." e os botões "Cancelar" (foco inicial; mantém a tela) e "Descartar" (sai sem salvar). Sem alterações, Cancelar sai direto. Se o usuário desfizer a alteração à mão, não há confirmação.
 - **Salvar:** persiste, mostra a mensagem de sucesso e **permanece na mesma tela**.
   - **Cadastro novo:** depois de salvar, a tela vira a edição do registro criado (`navigate(<lista>/<id>, { replace: true })`), para que o próximo Salvar atualize em vez de duplicar.
@@ -278,7 +285,7 @@ Toda tela de cadastro ou edição segue este comportamento:
 ## Texto de interface
 
 - pt-BR, direto e curto. Rótulos de uma a três palavras; botões com verbo no infinitivo ("Registrar", "Aprovar", "Encerrar").
-- Sem frases de efeito, saudações, explicações óbvias ou parágrafos descritivos na tela.
+- Sem frases de efeito, saudações, explicações óbvias ou parágrafos descritivos na tela. Exceção pedida: a saudação da Central de Controle (`features/central/saudacoes.ts`), curta e sem prometer o que a tela não mostra.
 - Sem texto de ajuda quando o rótulo já basta. Descrição de página: no máximo uma linha, e só se necessária.
 - Mensagens de erro dizem o que fazer: "Informe a localização", não "Ops! Algo deu errado".
 - Dados simulados (rotas, posições, tempos, classificação sugerida) recebem o `SimulatedBadge` ("Simulado") — exigência RNF07 — sem textos longos de aviso.

@@ -1,4 +1,4 @@
-import { useParams } from 'react-router'
+import { useParams, useSearchParams } from 'react-router'
 import { PageHeader } from '@/components/shared/page-header'
 import { RegistroLoader } from '@/components/shared/registro-loader'
 import { EquipamentoForm } from '@/features/equipamentos/components/equipamento-form'
@@ -8,6 +8,9 @@ import { useAcoesCadastro } from '@/lib/cadastro'
 
 export function EquipamentoFormPage() {
   const { id } = useParams()
+  // Vindo da planta do piso ("Novo equipamento neste piso"), o piso já vem preenchido.
+  const [busca] = useSearchParams()
+  const pisoInicial = id ? undefined : busca.get('piso') ?? undefined
   const equipamento = useEquipamento(id)
   const acoes = useAcoesCadastro({
     id,
@@ -20,9 +23,9 @@ export function EquipamentoFormPage() {
 
   return (
     <>
-      <PageHeader title={id ? 'Editar equipamento' : 'Novo equipamento'} />
+      <PageHeader voltar="/cadastros/equipamentos" title={id ? 'Editar equipamento' : 'Novo equipamento'} />
       <RegistroLoader edicao={!!id} consulta={equipamento} naoEncontrado="Equipamento não encontrado.">
-        <EquipamentoForm key={equipamento.data?.id ?? 'novo'} defaultValues={paraFormulario(equipamento.data)} {...acoes} />
+        <EquipamentoForm key={equipamento.data?.id ?? 'novo'} defaultValues={{ ...paraFormulario(equipamento.data), ...(pisoInicial ? { pisoId: pisoInicial } : {}) }} {...acoes} />
       </RegistroLoader>
     </>
   )

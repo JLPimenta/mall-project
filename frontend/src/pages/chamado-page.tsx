@@ -1,4 +1,4 @@
-import { ArrowLeftIcon, FileQuestionIcon } from 'lucide-react'
+import { FileQuestionIcon } from 'lucide-react'
 import { Link, useParams } from 'react-router'
 import { EmptyState } from '@/components/shared/empty-state'
 import { ErrorState } from '@/components/shared/error-state'
@@ -14,7 +14,6 @@ import { prioridadeChamadoLabel, statusChamadoInfo, tipoChamadoLabel, type Chama
 import { useEquipes } from '@/features/equipes/hooks'
 import { ApiError } from '@/lib/api'
 import { formatar } from '@/lib/datas'
-import { useVoltarPara } from '@/lib/navegacao'
 
 function Dado({ label, children }: { label: string; children: React.ReactNode }) {
   return <div className="min-w-0"><dt className="text-xs text-muted-foreground">{label}</dt><dd className="mt-1 break-words text-sm">{children}</dd></div>
@@ -40,6 +39,14 @@ function DetalheChamado({ chamado }: { chamado: Chamado }) {
           <Dado label="Local informado">{chamado.localInformado || 'Não informado'}</Dado>
           <Dado label="Local do QR Code">{chamado.localQrNome || chamado.localQrCodigo || 'QR Code sem local cadastrado'}{chamado.localQrCodigo && chamado.localQrNome && <span className="text-muted-foreground"> · {chamado.localQrCodigo}</span>}</Dado>
           <Dado label="Contato para retorno">{chamado.contato || 'Não informado'}</Dado>
+          {chamado.abertoPor && <Dado label="Aberto por">{chamado.abertoPor}</Dado>}
+          {chamado.tarefaOrigemId && (
+            <Dado label="Tarefa de origem">
+              <Link to={`/tarefas/${chamado.tarefaOrigemId}`} className="underline-offset-4 hover:underline">
+                Abrir tarefa
+              </Link>
+            </Dado>
+          )}
         </dl>
       </section>
       <section aria-labelledby="titulo-midia" className="space-y-3 rounded-lg border p-4 sm:p-5">
@@ -80,11 +87,10 @@ function DetalheChamado({ chamado }: { chamado: Chamado }) {
 export function ChamadoPage() {
   const { id } = useParams()
   const consulta = useChamado(id)
-  const voltarPara = useVoltarPara('/chamados')
 
   return (
     <>
-      <PageHeader title={consulta.data ? `Chamado ${consulta.data.protocolo}` : 'Chamado externo'} actions={<Button asChild variant="outline" size="sm"><Link to={voltarPara}><ArrowLeftIcon aria-hidden /> Voltar à fila</Link></Button>} />
+      <PageHeader voltar="/chamados" title={consulta.data ? `Chamado ${consulta.data.protocolo}` : 'Chamado externo'} />
       {consulta.isPending && <Skeleton className="h-72 w-full" />}
       {consulta.isError && (consulta.error instanceof ApiError && consulta.error.status === 404 ? <EmptyState title="Chamado não encontrado" icon={FileQuestionIcon} /> : <ErrorState onRetry={() => consulta.refetch()} />)}
       {consulta.data && <DetalheChamado chamado={consulta.data} />}

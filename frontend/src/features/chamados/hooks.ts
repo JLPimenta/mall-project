@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { chamadosApi } from './api'
-import type { AprovarChamadoRequest, ArquivarChamadoRequest, StatusChamado } from './types'
+import type { AbrirChamadoRequest, AprovarChamadoRequest, ArquivarChamadoRequest, StatusChamado } from './types'
 
 export const chamadoKeys = {
   all: ['chamados'] as const,
@@ -35,5 +35,14 @@ export function useArquivarChamado(id: string) {
       client.setQueryData(chamadoKeys.detalhe(id), chamado)
       return client.invalidateQueries({ queryKey: chamadoKeys.all })
     },
+  })
+}
+
+/** Qualquer perfil abre chamado; ele entra na fila de triagem (Chamados). */
+export function useAbrirChamado() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: ({ dados, midia }: { dados: AbrirChamadoRequest; midia: File | null }) => chamadosApi.abrir(dados, midia),
+    onSuccess: () => client.invalidateQueries({ queryKey: chamadoKeys.all }),
   })
 }

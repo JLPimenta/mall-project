@@ -20,6 +20,15 @@ class PisoServiceTest {
     @Mock
     private PisoRepository repository;
 
+    @Mock
+    private com.smartmall.ops.domain.repository.equipamento.EquipamentoRepository equipamentoRepository;
+
+    @Mock
+    private com.smartmall.ops.domain.repository.chamado.LocalQrRepository localRepository;
+
+    @Mock
+    private com.smartmall.ops.domain.repository.piso.PlantaPisoRepository plantaRepository;
+
     @InjectMocks
     private PisoService service;
 
@@ -42,5 +51,27 @@ class PisoServiceTest {
         assertThatThrownBy(() -> service.create(piso))
                 .isInstanceOf(DomainException.class)
                 .hasMessage("Já existe um piso com o código L1.");
+    }
+
+    @Test
+    void naoExcluiPisoEmUso() {
+        when(equipamentoRepository.existsByPisoId("p1")).thenReturn(true);
+        assertThatThrownBy(() -> service.delete("p1")).hasMessage("Piso com equipamentos não pode ser excluído.");
+
+        when(equipamentoRepository.existsByPisoId("p1")).thenReturn(false);
+        when(localRepository.existsByPisoId("p1")).thenReturn(true);
+        assertThatThrownBy(() -> service.delete("p1")).hasMessage("Piso com locais de QR Code não pode ser excluído.");
+        org.mockito.Mockito.verify(repository, org.mockito.Mockito.never()).deleteById(any());
+    }
+
+    @Test
+    void excluiPisoSemUsoJuntoComAPlanta() {
+        var planta = new com.smartmall.ops.domain.entity.PlantaPiso();
+        when(plantaRepository.findByPisoId("p1")).thenReturn(java.util.Optional.of(planta));
+
+        service.delete("p1");
+
+        verify(plantaRepository).delete(planta);
+        verify(repository).deleteById("p1");
     }
 }

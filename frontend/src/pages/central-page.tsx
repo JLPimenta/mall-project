@@ -1,48 +1,43 @@
-import { MapPinOffIcon } from 'lucide-react'
-import { useState } from 'react'
+import { LayersIcon } from 'lucide-react'
 import { EmptyState } from '@/components/shared/empty-state'
 import { ErrorState } from '@/components/shared/error-state'
 import { PageHeader } from '@/components/shared/page-header'
-import { SimulatedBadge } from '@/components/shared/simulated-badge'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { IndicadoresCentral } from '@/features/central/components/indicadores-central'
+import { MapaCentral } from '@/features/central/components/mapa-central'
+import { SaudacaoCentral } from '@/features/central/components/saudacao-central'
 import { PisoSelect } from '@/features/pisos/components/piso-select'
 import { usePisos } from '@/features/pisos/hooks'
+import { useFiltrosUrl } from '@/lib/filtros'
 
+const PARAMETROS = ['piso'] as const
+
+/** Central de Controle: saudação, visão geral da operação e a visão do piso sobre a planta. */
 export function CentralPage() {
   const { data: pisos, isPending, isError, refetch } = usePisos()
-  const [selecionado, setSelecionado] = useState<string>()
-
-  const pisoId = selecionado ?? pisos?.[0]?.id
-  const piso = pisos?.find((p) => p.id === pisoId)
+  // O piso escolhido fica na URL: voltar de uma tarefa ou chamado reabre o mesmo piso.
+  const parametros = useFiltrosUrl(PARAMETROS)
+  const pisoId = pisos?.some((p) => p.id === parametros.valores.piso) ? parametros.valores.piso : pisos?.[0]?.id
 
   return (
     <>
       <PageHeader title="Central de Controle" />
+      <SaudacaoCentral />
 
       <IndicadoresCentral />
 
-      {isPending && <Skeleton className="h-64 w-full" />}
-
-      {isError && <ErrorState onRetry={() => refetch()} />}
-
-      {pisos && pisos.length === 0 && <EmptyState title="Nenhum piso cadastrado" />}
-
-      {pisos && piso && (
-        <section aria-labelledby="mapa-titulo" className="grid gap-4">
-          <PisoSelect pisos={pisos} value={pisoId} onChange={setSelecionado} />
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle id="mapa-titulo">{piso.nome}</CardTitle>
-              <SimulatedBadge />
-            </CardHeader>
-            <CardContent>
-              <EmptyState title="Sem marcadores neste piso" icon={MapPinOffIcon} />
-            </CardContent>
-          </Card>
-        </section>
-      )}
+      <section aria-labelledby="mapa-titulo" className="grid gap-3">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <h2 id="mapa-titulo" className="text-lg font-semibold">
+            Visão do piso
+          </h2>
+          {pisos && pisos.length > 0 && <PisoSelect pisos={pisos} value={pisoId} onChange={(id) => parametros.definir('piso', id)} />}
+        </div>
+        {isPending && <Skeleton className="aspect-[3/2] w-full" />}
+        {isError && <ErrorState onRetry={() => refetch()} />}
+        {pisos?.length === 0 && <EmptyState title="Nenhum piso cadastrado" icon={LayersIcon} />}
+        {pisoId && <MapaCentral key={pisoId} pisoId={pisoId} />}
+      </section>
     </>
   )
 }

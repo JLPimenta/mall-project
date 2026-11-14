@@ -11,6 +11,9 @@ import org.springframework.data.jpa.repository.Query;
 public interface ChamadoRepository extends BaseRepository<Chamado> {
     Optional<Chamado> findByChaveEnvio(String chaveEnvio);
     Page<Chamado> findByStatus(StatusChamado status, Pageable pageable);
+
+    /** Chamados com local QR no piso (visão do piso na Central). */
+    java.util.List<Chamado> findByLocalQrPisoIdAndStatusIn(String pisoId, java.util.Collection<StatusChamado> status);
     @Query(value = "select 1 from pg_advisory_xact_lock(hashtext(:chave))", nativeQuery = true)
     Integer bloquearChave(String chave);
 }

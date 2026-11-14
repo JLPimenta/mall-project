@@ -38,6 +38,15 @@ export function maxCaracteres(item: ItemTarefa) {
   return item.maxCaracteres ?? LIMITE.respostaTexto
 }
 
+/** Índices dos itens Sim/Não respondidos fora do esperado e ainda sem chamado. */
+export function naoConformesSemChamado(itens: ItemTarefa[], valores: ExecucaoValores) {
+  return itens.flatMap((item, i) => {
+    const resposta = valores.respostas[i]?.resposta ?? ''
+    const fora = item.tipoResposta === 'SIM_NAO' && !!item.respostaEsperada && !!resposta && resposta !== item.respostaEsperada
+    return fora && !item.chamado ? [i] : []
+  })
+}
+
 /** Índices dos itens obrigatórios sem resposta. */
 export function faltandoParaEnviar(itens: ItemTarefa[], valores: ExecucaoValores) {
   return itens.flatMap((item, i) => (item.obrigatorio && !valores.respostas[i]?.resposta.trim() ? [i] : []))

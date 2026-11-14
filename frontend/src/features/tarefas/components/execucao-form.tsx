@@ -10,7 +10,7 @@ import { Field, FieldError, FieldLabel } from '@/components/ui/field'
 import { mensagemDeErro } from '@/lib/cadastro'
 import { useEnviarParaAnalise, useSalvarExecucao } from '../hooks'
 import { LIMITE } from '../limites'
-import { execucaoSchema, faltandoParaEnviar, paraFormulario, paraRequisicao, type ExecucaoValores } from '../schemas'
+import { execucaoSchema, faltandoParaEnviar, naoConformesSemChamado, paraFormulario, paraRequisicao, type ExecucaoValores } from '../schemas'
 import type { TarefaDetalhe } from '../types'
 import { ChecklistExecucao } from './checklist-execucao'
 import { EvidenciasPendentes } from './evidencias-pendentes'
@@ -18,13 +18,15 @@ import { EvidenciasPendentes } from './evidencias-pendentes'
 type ExecucaoFormProps = {
   detalhe: TarefaDetalhe
   onCancel: () => void
+  /** Gestão abre os chamados criados a partir dos itens. */
+  podeAbrirChamado: boolean
 }
 
 /**
  * Execução pelo responsável: checklist, observação e evidências.
  * Salvar guarda o rascunho e permanece; Enviar para análise salva e envia (CadastroForm nos dois casos).
  */
-export function ExecucaoForm({ detalhe, onCancel }: ExecucaoFormProps) {
+export function ExecucaoForm({ detalhe, onCancel, podeAbrirChamado }: ExecucaoFormProps) {
   const id = detalhe.tarefa.id
   const form = useForm<ExecucaoValores>({ resolver: zodResolver(execucaoSchema(detalhe.itens)), defaultValues: paraFormulario(detalhe) })
   const observacao = useWatch({ control: form.control, name: 'observacao' })
@@ -52,6 +54,12 @@ export function ExecucaoForm({ detalhe, onCancel }: ExecucaoFormProps) {
       if (faltando.length) {
         setErro('Responda os itens obrigatórios.')
         form.setFocus(`respostas.${faltando[0]}.resposta`)
+        return undefined
+      }
+      const semChamado = naoConformesSemChamado(detalhe.itens, dados)
+      semChamado.forEach((i) => form.setError(`respostas.${i}.resposta`, { message: 'Abra um chamado para a não conformidade.' }))
+      if (semChamado.length) {
+        setErro('Abra um chamado para os itens não conformes.')
         return undefined
       }
       if (!pendentes && detalhe.tarefa.origem === 'MANUTENCAO_PROGRAMADA') {
@@ -88,7 +96,7 @@ export function ExecucaoForm({ detalhe, onCancel }: ExecucaoFormProps) {
         </Button>
       }
     >
-      {detalhe.itens.length > 0 && <ChecklistExecucao itens={detalhe.itens} />}
+      {detalhe.itens.length > 0 && <ChecklistExecucao tarefa={detalhe.tarefa} itens={detalhe.itens} podeAbrirChamado={podeAbrirChamado} />}
       <Field data-invalid={!!form.formState.errors.observacao} className="gap-1.5">
         <FieldLabel htmlFor="execucao-observacao">{detalhe.tarefa.origem === 'CHAMADO' ? 'Resolução' : 'Observação'}</FieldLabel>
         <LimitedTextarea

@@ -78,6 +78,9 @@ public class LimpezaE2EService {
                 jdbc.update("delete from chamado where id=?", id);
                 chamados++;
             }
+            // Locais de QR Code criados na planta pelo teste levam a marca no nome; o marcador sai junto.
+            jdbc.update("delete from marcador_piso where tipo='LOCAL_QR' and referencia_id in (select id from local_qr where nome like ?)", "%" + marca + "%");
+            jdbc.update("delete from local_qr l where l.nome like ? and not exists (select 1 from chamado c where c.local_qr_id=l.id)", "%" + marca + "%");
         }
         // Itens de estoque do teste usam a marca como código; as movimentações saem junto (rastreabilidade de teste).
         for (var item : itemRepository.findByCodigo(marca)) {

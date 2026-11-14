@@ -22,6 +22,8 @@ import com.smartmall.ops.domain.model.tarefa.RespostaItemRequest;
 import com.smartmall.ops.domain.repository.tarefa.TarefaEvidenciaRepository;
 import com.smartmall.ops.domain.repository.tarefa.TarefaRepository;
 import com.smartmall.ops.domain.repository.usuario.UsuarioRepository;
+import com.smartmall.ops.domain.service.chamado.ChamadoService;
+import com.smartmall.ops.domain.entity.Chamado;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -59,6 +61,7 @@ class ExecucaoTarefaServiceTest {
     @Mock private TarefaRepository repository;
     @Mock private TarefaEvidenciaRepository evidenciaRepository;
     @Mock private UsuarioRepository usuarioRepository;
+    @Mock private ChamadoService chamadoService;
 
     private ExecucaoTarefaService service;
     private Tarefa tarefa;
@@ -67,7 +70,7 @@ class ExecucaoTarefaServiceTest {
     @BeforeEach
     void setUp() {
         service = new ExecucaoTarefaService(repository, evidenciaRepository, usuarioRepository,
-                Clock.fixed(AGORA.atZone(FUSO).toInstant(), FUSO));
+                Clock.fixed(AGORA.atZone(FUSO).toInstant(), FUSO), null, chamadoService);
 
         var checklist = new Checklist("Elevador", List.of(
                 item(1, "Freios ok?", TipoResposta.SIM_NAO, true, null),
@@ -106,7 +109,8 @@ class ExecucaoTarefaServiceTest {
     }
 
     private static ChecklistItem item(int ordem, String pergunta, TipoResposta tipo, boolean obrigatorio, Integer max) {
-        var item = new ChecklistItem(null, ordem, pergunta, tipo, obrigatorio, max);
+        // Sim/Não com resposta esperada "SIM": "NAO" é não conformidade.
+        var item = new ChecklistItem(null, ordem, pergunta, tipo, obrigatorio, max, tipo == TipoResposta.SIM_NAO ? "SIM" : null);
         item.setId("modelo-" + ordem);
         return item;
     }
@@ -424,5 +428,81 @@ class ExecucaoTarefaServiceTest {
 
         assertThat(service.arquivo("t1", "ev0", SUPERVISOR).tipoConteudo()).isEqualTo("image/png");
         assertThatThrownBy(() -> service.arquivo("t1", "ev0", DE_FORA)).isInstanceOf(EntityNotFoundException.class);
+    }
+
+    // ---- não conformidade e chamado
+
+    private Chamado chamado(String protocolo) {
+        var c = new Chamado();
+        c.setId("ch-" + protocolo);
+        c.setProtocolo(protocolo);
+        return c;
+    }
+
+    @Test
+    void respostaDiferenteDaEsperadaEhNaoConformidade() {
+        emExecucao();
+
+        var detalhe = service.salvar("t1", respostas(null, Map.of("i1", "NAO", "i2", "3")), MEMBRO);
+
+        assertThat(detalhe.getItens()).extracting(i -> i.isNaoConforme()).containsExactly(true, false, false);
+        assertThat(detalhe.getItens().getFirst().getRespostaEsperada()).isEqualTo("SIM");
+    }
+
+    @Test
+    void naoConformidadeSemChamadoImpedeOEnvio() {
+        emExecucao();
+        service.adicionarEvidencia("t1", "a.png", PNG, MEMBRO);
+
+        assertThatThrownBy(() -> service.enviar("t1", respostas(null, Map.of("i1", "NAO", "i2", "3")), MEMBRO))
+                .isInstanceOf(DomainException.class)
+                .hasMessage("Abra um chamado para a não conformidade: Freios ok?");
+        assertThat(tarefa.getStatus()).isEqualTo(StatusTarefa.EM_EXECUCAO);
+    }
+
+    @Test
+    void abrirChamadoUsaOLocalDaTarefaVinculaOItemELiberaOEnvio() {
+        emExecucao();
+        service.adicionarEvidencia("t1", "a.png", PNG, MEMBRO);
+        service.salvar("t1", respostas(null, Map.of("i1", "NAO", "i2", "3")), MEMBRO);
+        org.mockito.Mockito.when(chamadoService.abrir("Freio com folga", "Piso L1 · Praça", "u-membro", tarefa)).thenReturn(chamado("CH-1"));
+
+        var detalhe = service.abrirChamado("t1", "i1", "Freio com folga", MEMBRO);
+
+        assertThat(detalhe.getItens().getFirst().getChamado().getNome()).isEqualTo("CH-1");
+        service.enviar("t1", respostas(null, Map.of("i1", "NAO", "i2", "3")), MEMBRO);
+        assertThat(tarefa.getStatus()).isEqualTo(StatusTarefa.EM_ANALISE);
+    }
+
+    @Test
+    void itemTextoOuNumeroTambemPodeAbrirChamado() {
+        emExecucao();
+        org.mockito.Mockito.when(chamadoService.abrir(any(), any(), any(), any())).thenReturn(chamado("CH-2"));
+
+        var detalhe = service.abrirChamado("t1", "i2", "Desnível fora do padrão", MEMBRO);
+
+        assertThat(detalhe.getItens().get(1).getChamado().getNome()).isEqualTo("CH-2");
+    }
+
+    @Test
+    void naoAbreSegundoChamadoParaOMesmoItem() {
+        emExecucao();
+        org.mockito.Mockito.when(chamadoService.abrir(any(), any(), any(), any())).thenReturn(chamado("CH-1"));
+        service.abrirChamado("t1", "i1", "Freio com folga", MEMBRO);
+
+        assertThatThrownBy(() -> service.abrirChamado("t1", "i1", "De novo", MEMBRO))
+                .hasMessage("Já há um chamado aberto para este item: CH-1");
+        org.mockito.Mockito.verify(chamadoService, org.mockito.Mockito.times(1)).abrir(any(), any(), any(), any());
+    }
+
+    @Test
+    void soOResponsavelAbreChamadoPeloChecklist() {
+        emExecucao();
+
+        assertThatThrownBy(() -> service.abrirChamado("t1", "i1", "x", OUTRO_MEMBRO))
+                .hasMessage("Só o responsável pela tarefa pode executá-la.");
+        assertThatThrownBy(() -> service.abrirChamado("t1", "nao-existe", "x", MEMBRO))
+                .hasMessage("Item do checklist não encontrado.");
+        org.mockito.Mockito.verifyNoInteractions(chamadoService);
     }
 }

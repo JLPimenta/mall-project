@@ -73,3 +73,13 @@ export function useAdicionarEvidencia(id: string) {
 export function useRemoverEvidencia(id: string) {
   return useAcaoNaTarefa(id, (evidenciaId: string) => tarefasApi.removerEvidencia(id, evidenciaId))
 }
+
+/** Chamado a partir de um item do checklist; o item passa a mostrar o protocolo. */
+export function useAbrirChamadoItem(id: string) {
+  const queryClient = useQueryClient()
+  return useAcaoNaTarefa(id, async ({ itemId, descricao }: { itemId: string; descricao: string }) => {
+    const detalhe = await tarefasApi.abrirChamadoItem(id, itemId, descricao)
+    await queryClient.invalidateQueries({ queryKey: ['chamados'] })
+    return detalhe
+  })
+}
