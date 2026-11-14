@@ -44,6 +44,18 @@ O nginx aceita até 21 MB no envio de chamado público (`POST /api/publico/chama
 
 No navegador da máquina, abra `http://localhost:5173/relatar?local=banheiro-norte`. Para um QR Code lido no celular, use um domínio ou IP acessível ao aparelho, como `http://<IP-da-maquina>:5173/relatar?local=banheiro-norte` no modo com containers; `localhost` no celular aponta para o próprio aparelho. O visitante informa o problema e pode enviar mídia sem login; o local vem preenchido pelo código da URL. A equipe revisa o pré-cadastro em `/chamados` com perfil Supervisor ou Administrador. A seed de desenvolvimento também oferece `praca-alimentacao` e `entrada`.
 
+Os QR Codes de demonstração estão em `docs/qrcodes/demo/` (PNG para impressão e SVG vetorial). Eles apontam para o IP Wi-Fi desta máquina no momento da geração (`192.168.10.111:5173`); use-os apenas na mesma rede, com a stack em containers ativa. Esse IP pode mudar. Confira `enderecos.json` antes de imprimir.
+
+Para gerar os três QR Codes com o endereço definitivo do sistema:
+
+```bash
+cd frontend
+npm install
+npm run qr:gerar -- --base-url https://seu-dominio.com --output ../docs/qrcodes/finais
+```
+
+O gerador exige um domínio ou IP acessível pelo celular e recusa `localhost`. Cada código abre `/relatar?local=<codigo>` para o local correspondente.
+
 ## Contas de demonstração
 
 Criadas pela seed do Liquibase (contexto `dev`). A tela de login tem atalhos para cada perfil.
