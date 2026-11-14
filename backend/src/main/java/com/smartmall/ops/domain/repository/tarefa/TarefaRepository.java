@@ -46,6 +46,9 @@ public interface TarefaRepository extends BaseRepository<Tarefa> {
 
     long countByStatus(StatusTarefa status);
 
+    /** Tarefas assumidas no status informado, da mais antiga para a mais recente. */
+    List<Tarefa> findByStatusAndResponsavelIsNotNullOrderByDataHoraPrevistaAsc(StatusTarefa status);
+
     /** Agendadas com data e hora em [de, agora): a mesma regra de Tarefa.isAtrasada. */
     @Query("select count(t) from Tarefa t where t.status = 'AGENDADA' and t.dataHoraPrevista >= :de and t.dataHoraPrevista < :agora")
     long contarAtrasadas(LocalDateTime de, LocalDateTime agora);

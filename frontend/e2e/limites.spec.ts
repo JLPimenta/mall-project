@@ -30,6 +30,7 @@ test.describe('Todo campo tem limite', () => {
     // Listagens: campos de filtro também têm limite.
     '/cadastros/equipamentos',
     '/cadastros/equipes',
+    '/cadastros/equipes?visao=funcionarios',
     '/planejamento/manutencoes-programadas',
     '/planejamento/modelos-checklist',
   ]) {
