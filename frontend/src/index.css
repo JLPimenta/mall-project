@@ -149,7 +149,7 @@
     background-image: linear-gradient(90deg, var(--primary), var(--gradiente-fim));
 }
 
-/* Easter egg do login (dois cliques no logo): o elefante atravessa a frase e cada letra cai quando ele passa. */
+/* Easter egg do login (dois cliques no logo): o elefante atravessa o painel por cima da frase, cada letra cai quando ele passa, e ele some na borda com a parte branca. */
 .elefante-marca {
     animation: elefante-passa var(--travessia, 3600ms) linear forwards;
 }
@@ -157,8 +157,8 @@
     animation: letra-cai 1100ms cubic-bezier(0.5, 0, 0.9, 0.4) var(--atraso, 0ms) forwards;
 }
 @keyframes elefante-passa {
-    from { transform: translateX(-140px); }
-    to { transform: translateX(calc(var(--percurso, 800px) - 140px)); }
+    from { transform: translateX(calc(-1 * var(--largura-elefante, 350px))); }
+    to { transform: translateX(calc(var(--percurso, 1050px) - var(--largura-elefante, 350px))); }
 }
 @keyframes letra-cai {
     0% { transform: none; }

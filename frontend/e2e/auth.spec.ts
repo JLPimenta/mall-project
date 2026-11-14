@@ -18,7 +18,7 @@ test.describe('Tela de login', () => {
 
     // A frase inteira fica para leitores de tela; as letras visíveis são decorativas (easter egg, aria-hidden).
     await expect(page.getByRole('complementary')).toMatchAriaSnapshot(`
-      - paragraph: Decisões operacionais mais claras, em tempo real.
+      - paragraph: Boas-vindas ao SmartMall Ops IA
       - paragraph: Acompanhe chamados, tarefas, equipes e estoque do Capim Dourado Shopping.
     `)
   })
@@ -35,7 +35,7 @@ test.describe('Tela de login', () => {
     // Travessia (3,6 s) + pausa (1,8 s): o elefante sai e a frase continua acessível.
     await expect(elefante).toHaveCount(0, { timeout: 10_000 })
     await expect(page.getByRole('complementary')).toMatchAriaSnapshot(`
-      - paragraph: Decisões operacionais mais claras, em tempo real.
+      - paragraph: Boas-vindas ao SmartMall Ops IA
     `)
   })
 
