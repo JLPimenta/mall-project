@@ -4,6 +4,7 @@ MVP de gestão operacional para shopping centers (cenário: Capim Dourado Shoppi
 
 Referências obrigatórias antes de implementar qualquer funcionalidade:
 
+- `docs/modulo-manutencao.md` — passo a passo e regras do módulo de manutenção.
 - `docs/SmartMall_Ops_AI_Documentacao_Inicial.md` — requisitos (RF/RNF), telas, modelo de dados e critérios de aceite.
 - `INSTRUCTIONS.md` e `docs/dist/` — protótipo HTML5/JS existente. Serve de referência de fluxo e identidade visual, não de código a ser copiado.
 
@@ -92,11 +93,25 @@ Regras:
 - Controllers não contêm regra de negócio; apenas delegam ao serviço.
 - Testes de serviço para as regras do fluxo principal (RNF09). Controllers com `@WebMvcTest`, importando `SecurityConfiguration` e `PasswordConfiguration`.
 
+## Limites de dados (obrigatório)
+
+Nenhum campo de entrada fica sem limite. Um valor sem limite passa pela tela, estoura a coluna do banco (erro 500) ou trava a interface.
+
+- **O mesmo número nas quatro camadas:** coluna do banco (`VARCHAR(n)`), `@Size(max = n)` no `*Request`, `.max(n)` no schema Zod e `maxLength={n}` no campo. No frontend, o valor vem de uma constante da feature (ex.: `features/checklists/limites.ts`), nunca de número solto.
+- **Texto:** `@Size(max)` com mensagem em pt-BR. Senha: máximo de 72 (limite do BCrypt).
+- **Número:** `@Min`/`@Max` no backend; `min`/`max` no `<input type="number">`.
+- **Listas:** `@Size(max)` (ex.: até 50 itens por checklist) e o botão de adicionar desabilitado ao atingir o limite.
+- **Contador:** texto livre usa `LimitedInput` (`components/shared`), que exige `maxLength`. O contador fica sempre visível em campos únicos de destaque (ex.: Nome) e, em listas, aparece a partir de 80% do limite.
+- **Guardas automáticas, que devem continuar passando:**
+  - backend: `LimitesDosRequestsTest` reprova qualquer `*Request` com texto ou lista sem `@Size(max)` ou número sem `@Max`;
+  - frontend: `e2e/limites.spec.ts` reprova campos sem `maxlength` ou números sem `min`/`max`. Toda tela nova com formulário entra nesse spec.
+
 Autenticação (`api/config/security`):
 
 - Sessão HTTP com cookie `JSESSIONID` (HttpOnly, SameSite=Strict). Sem JWT. CSRF desabilitado porque o frontend é same-origin via proxy.
 - Endpoints: `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/sessao`. Todo o resto de `/api/**` exige sessão.
-- Perfis no enum `Perfil` (`ADMINISTRADOR`, `SUPERVISOR`, `FUNCIONARIO`), expostos como `ROLE_<PERFIL>`. Restringir endpoints com `@PreAuthorize("hasAnyRole('ADMINISTRADOR','SUPERVISOR')")`.
+- Perfis no enum `Perfil` (`ADMINISTRADOR`, `SUPERVISOR`, `FUNCIONARIO`), expostos como `ROLE_<PERFIL>`.
+- Restrição por perfil de um recurso inteiro: `requestMatchers(...).hasAnyRole(...)` em `SecurityConfiguration`. **Não** usar `@PreAuthorize` na classe do controller: ele não alcança os endpoints herdados de `BaseController`/`BaseSearchController` (o Spring procura a anotação na classe que declara o método). `@PreAuthorize` só em métodos declarados no próprio controller. Toda restrição tem teste `@WebMvcTest` com o perfil bloqueado.
 - Usuário logado no controller: `@AuthenticationPrincipal UsuarioAutenticado`. Use o `id` dele como responsável no histórico.
 - Senhas sempre com BCrypt (`PasswordEncoder`); `UsuarioResponse` nunca expõe a senha.
 - 401 e 403 respondem `ResponseError` em JSON.
@@ -110,7 +125,7 @@ frontend/src
 ├── components
 │   ├── ui/          Componentes do shadcn (gerados via CLI; editar com parcimônia)
 │   ├── layout/      AppShell, Sidebar, Header, PageHeader
-│   └── shared/      Componentes reutilizáveis do domínio (StatusBadge, PriorityBadge, EmptyState, SimulatedBadge, DataTable)
+│   └── shared/      Componentes reutilizáveis do domínio (EmptyState, ErrorState, PageHeader, SimulatedBadge, ConfirmDialog, FormActions, LimitedInput)
 ├── features/<modulo>/   ocorrencias, central, tarefas, equipamentos, manutencao, historico, auth
 │   ├── components/  Componentes específicos do módulo
 │   ├── api.ts       Funções de acesso à API do módulo
@@ -138,11 +153,45 @@ HTML5 e acessibilidade (tecnologia sorteada, seção 9 da documentação — é 
 
 - `index.html` com `<!DOCTYPE html>`, `lang="pt-BR"`, `charset` e `viewport`.
 - Estrutura semântica: `header`, `nav`, `main`, `section`, `footer`, hierarquia de títulos correta (um `h1` por página).
-- Formulários com `label` associado, `type` adequado, `required`/`minLength`/`maxLength` quando aplicável, além da validação Zod.
+- Formulários com `label` associado, `type` adequado, `required` quando aplicável e **sempre** `maxLength` (ou `min`/`max` em números), além da validação Zod. Ver "Limites de dados".
 - Central de Controle: diagrama do piso em SVG inline, com marcadores focáveis e operáveis por teclado.
 - Layout responsivo: sidebar no desktop, navegação compacta no mobile.
 
 Estados obrigatórios em toda tela com dados: carregando (Skeleton), vazio, erro e sucesso.
+
+## Layout, espaçamento e uso da tela
+
+Objetivo: o usuário vê o máximo de informação útil sem rolar, sem áreas vazias desperdiçadas.
+
+- **Largura:** formulários e listas usam até `max-w-6xl`. Campos curtos por natureza (nome, código) podem ser limitados (ex.: `max-w-xl`), mas o contêiner não. Não deixar mais da metade da tela vazia no desktop.
+- **Itens repetidos** (perguntas, linhas, registros) ficam em **linhas compactas tipo tabela** no desktop:
+  - uma linha por item e rótulos uma vez só, no cabeçalho;
+  - cada campo mantém rótulo acessível (`md:sr-only`) e cada linha é um `<fieldset>` com `<legend>` (ex.: `checklists/components/item-grid.ts`).
+  - No celular, as linhas viram cartões empilhados com rótulos visíveis.
+- **Ações de lista crescente no topo:** "Adicionar …" fica no cabeçalho da lista (ao lado do título com a contagem `n/limite`), nunca no fim. O item novo recebe o foco e entra na área visível.
+- **Formulário longo:** barra de ações fixa no rodapé (`sticky bottom-0`), com Cancelar e Salvar sempre visíveis. Usar `FormActions` (`components/shared`).
+- **Ações secundárias de linha** (mover, remover): no desktop aparecem ao passar o mouse ou focar a linha; no celular ficam sempre visíveis.
+- **Teclado:** Enter avança para o próximo campo lógico e, no último item, cria um novo. Nunca envia o formulário sem querer. Reordenar funciona por arrastar (mouse, toque e teclado) e por botões ↑ ↓.
+- **Densidade:** espaçamento vertical entre grupos `gap-6`; dentro de linhas `gap-2`; altura de linha de item no desktop abaixo de 64 px (há teste).
+- **Contador e mensagens dentro do espaço existente:** contadores ficam dentro do campo, para não deslocar o layout.
+
+## Telas de cadastro e edição (obrigatório)
+
+Toda tela de cadastro ou edição segue este comportamento:
+
+- **Cancelar com alterações:** se algum campo foi preenchido ou alterado (`formState.isDirty`, o que inclui adicionar, remover e reordenar itens), Cancelar abre um diálogo com o título "Descartar alterações?", o aviso "As informações não salvas serão perdidas." e os botões "Cancelar" (foco inicial; mantém a tela) e "Descartar" (sai sem salvar). Sem alterações, Cancelar sai direto. Se o usuário desfizer a alteração à mão, não há confirmação.
+- **Salvar:** persiste, mostra a mensagem de sucesso e **permanece na mesma tela**.
+  - **Cadastro novo:** depois de salvar, a tela vira a edição do registro criado (`navigate(<lista>/<id>, { replace: true })`), para que o próximo Salvar atualize em vez de duplicar.
+  - **Valores salvos:** viram a nova base do formulário (`form.reset(salvos)`). Depois de salvar, Cancelar não pede confirmação.
+  - **Ordem dos passos:** o `reset` roda num `useEffect` depois do envio, nunca dentro do `handleSubmit`, porque o RHF sobrescreve o estado ao concluir. A mensagem de sucesso sai só depois do `reset` (via `useEffectEvent`), para nunca existir "salvo" com alteração pendente. Referência: `features/checklists/components/checklist-form.tsx`.
+  - **`<form data-alterado={isDirty}>`:** expõe o estado de alterações pendentes aos testes.
+  - **Erro ao salvar:** a tela, os dados digitados e o estado de alterações pendentes são mantidos.
+- **Componentes:** `FormActions` (barra fixa com Cancelar, Salvar e o diálogo de descarte) e `ConfirmDialog`, ambos em `components/shared`.
+- **Testes E2E de toda tela de cadastro:** salvar novo (vira edição e não duplica), salvar edição, Cancelar sem e com alterações, voltar no diálogo, Descartar e Cancelar depois de salvar.
+- **Sincronizar o teste depois de Salvar:**
+  - aguardar a resposta da API (`page.waitForResponse`) e `data-alterado="false"`;
+  - não confiar só no toast: o de uma gravação anterior pode continuar na tela e o teste seguir antes da hora;
+  - modelo: `salvar()` em `e2e/support/checklists.ts`.
 
 ## Texto de interface
 
@@ -174,6 +223,22 @@ Frontend (`npm run test:e2e`, Playwright em `frontend/e2e`):
 - Todos rodam em `desktop` e `mobile`; tratar a gaveta do menu no celular.
 - Estados difíceis de reproduzir (401, 500) são simulados com `page.route`.
 - Testes não podem depender de dados criados por outro teste. Se precisar criar dados, criar no próprio teste com nome único.
+
+Testes instáveis (flaky) são defeito, não azar. Regras:
+
+- **Nunca "corrigir" um teste intermitente com `.first()`, `.last()`, `waitForTimeout` ou aumento de timeout** sem entender a causa. Antes de aceitar um teste novo ou alterado, rodar a suíte pelo menos 3 vezes seguidas, ou usar `--repeat-each=10` no spec.
+- **Sincronizar pelo efeito da ação, não por sinais que podem ser antigos.** Exemplos de sinal antigo: um toast ainda na tela, um texto que já existia, a URL que não muda. Os efeitos válidos:
+  - a resposta da API (`page.waitForResponse`);
+  - um estado exposto pela tela (ex.: `data-alterado`);
+  - `expect.poll` para estilos com transição.
+- **Mensagens repetíveis (toasts):** não usá-las como prova de que *esta* ação terminou.
+- **Dados da seed são somente leitura nos testes.** Testes que mexem num registro da seed não salvam; os que precisam salvar criam o próprio registro e o apagam no `afterEach`.
+- **Ambiente estável:**
+  - não rodar o E2E enquanto containers reiniciam;
+  - não compilar o backend (`mvnw test`/`compile`) com o backend dev no ar durante o E2E: o devtools recarrega no meio da compilação e o login quebra;
+  - falha em massa no login indica ambiente, não código. Conferir `GET /api/auth/sessao`: deve responder JSON com "Sessão expirada".
+  - `e2e/global-setup.ts` faz essa conferência antes da suíte: espera até 60 s por frontend, backend com segurança e login da seed. Se o ambiente não ficar pronto, a suíte nem começa e a mensagem diz o que está errado. Ao surgir uma nova dependência de ambiente, incluir a verificação ali.
+- **Teste instável descoberto:** registrar a causa e a correção em `docs/testes-instaveis.md`.
 
 ## Escopo e prioridade
 

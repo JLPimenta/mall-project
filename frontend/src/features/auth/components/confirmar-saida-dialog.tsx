@@ -1,12 +1,4 @@
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
+import { ConfirmDialog } from '@/components/shared/confirm-dialog'
 
 type ConfirmarSaidaDialogProps = {
   open: boolean
@@ -14,19 +6,6 @@ type ConfirmarSaidaDialogProps = {
   onConfirm: () => void
 }
 
-export function ConfirmarSaidaDialog({ open, onOpenChange, onConfirm }: ConfirmarSaidaDialogProps) {
-  return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
-      {/* Sem descrição: o título basta. aria-describedby vazio evita o aviso do Radix. */}
-      <AlertDialogContent size="sm" aria-describedby={undefined}>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Sair do sistema?</AlertDialogTitle>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm}>Sair</AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
-  )
+export function ConfirmarSaidaDialog(props: ConfirmarSaidaDialogProps) {
+  return <ConfirmDialog {...props} title="Sair do sistema?" confirmLabel="Sair" />
 }

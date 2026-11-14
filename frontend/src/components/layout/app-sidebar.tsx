@@ -9,6 +9,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from '@/components/ui/sidebar'
 import { useSessao } from '@/features/auth/hooks'
 import { itensPermitidos } from './navigation'
@@ -16,6 +17,7 @@ import { itensPermitidos } from './navigation'
 export function AppSidebar() {
   const { pathname } = useLocation()
   const { data: usuario } = useSessao()
+  const { isMobile, setOpenMobile } = useSidebar()
 
   return (
     <Sidebar collapsible="icon">
@@ -33,7 +35,8 @@ export function AppSidebar() {
                 {itensPermitidos(usuario?.perfil).map((item) => (
                   <SidebarMenuItem key={item.to}>
                     <SidebarMenuButton asChild isActive={pathname.startsWith(item.to)} tooltip={item.title}>
-                      <NavLink to={item.to}>
+                      {/* No celular o menu é uma gaveta; fecha ao navegar para não cobrir a página. */}
+                      <NavLink to={item.to} onClick={() => isMobile && setOpenMobile(false)}>
                         <item.icon aria-hidden />
                         <span>{item.title}</span>
                       </NavLink>

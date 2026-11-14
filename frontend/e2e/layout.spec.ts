@@ -14,6 +14,17 @@ test.describe('Estrutura HTML5 do layout', () => {
     await expect(page.getByRole('navigation', { name: 'Principal' })).toBeVisible()
   })
 
+  test('no celular, a gaveta do menu fecha ao navegar', async ({ page, isMobile }) => {
+    test.skip(!isMobile, 'Gaveta existe só no celular.')
+    await entrar(page, contas.supervisor)
+
+    await page.getByRole('button', { name: 'Alternar menu' }).click()
+    await page.getByRole('navigation', { name: 'Principal' }).getByRole('link', { name: 'Checklists' }).click()
+
+    await expect(page.getByRole('navigation', { name: 'Principal' })).toBeHidden()
+    await expect(page.getByRole('heading', { level: 1, name: 'Checklists' })).toBeVisible()
+  })
+
   test('tela de login tem um main e um h1', async ({ page }) => {
     await page.goto('/login')
 

@@ -35,6 +35,9 @@ public class SecurityConfiguration {
     public static final String LOGIN_URL = "/api/auth/login";
     public static final String LOGOUT_URL = "/api/auth/logout";
 
+    /** Perfis de gestão: cadastram e supervisionam. */
+    private static final String[] GESTAO = {"ADMINISTRADOR", "SUPERVISOR"};
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, SecurityContextRepository contextRepository,
                                                    ObjectMapper objectMapper) throws Exception {
@@ -43,8 +46,11 @@ public class SecurityConfiguration {
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
                 .securityContext(context -> context.securityContextRepository(contextRepository))
+                // Restrição por perfil fica aqui, por recurso. @PreAuthorize na classe do controller NÃO
+                // alcança os endpoints herdados de BaseController/BaseSearchController.
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, LOGIN_URL).permitAll()
+                        .requestMatchers("/api/checklist", "/api/checklist/**").hasAnyRole(GESTAO)
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().permitAll())
                 .exceptionHandling(ex -> ex

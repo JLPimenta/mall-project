@@ -8,4 +8,6 @@
     <include file="db/changes/piso/20261113-2-seed-piso.sql" context="dev"/>
     <include file="db/changes/usuario/20261114-1-cria-usuario.sql"/>
     <include file="db/changes/usuario/20261114-2-seed-usuario.sql" context="dev"/>
+    <include file="db/changes/checklist/20261114-1-cria-checklist.sql"/>
+    <include file="db/changes/checklist/20261114-2-seed-checklist.sql" context="dev"/>
 </databaseChangeLog>

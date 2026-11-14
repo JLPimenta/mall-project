@@ -7,7 +7,7 @@ import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field
 import { Input } from '@/components/ui/input'
 import { ApiError } from '@/lib/api'
 import { useEntrar } from '../hooks'
-import { loginSchema, type LoginForm as LoginFormValues } from '../schemas'
+import { LIMITE_LOGIN, loginSchema, type LoginForm as LoginFormValues } from '../schemas'
 import type { UsuarioSessao } from '../types'
 import { DemoAccess } from './demo-access'
 
@@ -49,7 +49,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
               type="email"
               autoComplete="username"
               required
-              maxLength={150}
+              maxLength={LIMITE_LOGIN.email}
               aria-invalid={!!errors.email}
               {...form.register('email')}
             />
@@ -62,7 +62,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
               type="password"
               autoComplete="current-password"
               required
-              maxLength={72}
+              maxLength={LIMITE_LOGIN.senha}
               aria-invalid={!!errors.senha}
               {...form.register('senha')}
             />

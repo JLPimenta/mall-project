@@ -19,12 +19,12 @@ import lombok.Setter;
 public class UsuarioRequest {
 
     @NotBlank(message = "Informe o nome.")
-    @Size(max = 100)
+    @Size(max = 100, message = "O nome deve ter até 100 caracteres.")
     private String nome;
 
     @NotBlank(message = "Informe o e-mail.")
     @Email(message = "E-mail inválido.")
-    @Size(max = 150)
+    @Size(max = 150, message = "O e-mail deve ter até 150 caracteres.")
     private String email;
 
     @NotBlank(message = "Informe a senha.")
