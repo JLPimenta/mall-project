@@ -1,4 +1,4 @@
-import { ClipboardCheckIcon, ClipboardListIcon, ListChecksIcon, MapIcon, RepeatIcon, UsersIcon, WrenchIcon, type LucideIcon } from 'lucide-react'
+import { ChartColumnIcon, ClipboardCheckIcon, ClipboardListIcon, ListChecksIcon, MapIcon, PackageIcon, RepeatIcon, UsersIcon, WrenchIcon, type LucideIcon } from 'lucide-react'
 import { temPerfil } from '@/features/auth/permissoes'
 import type { Perfil } from '@/features/auth/types'
 
@@ -28,6 +28,8 @@ export const navGrupos: readonly NavGrupo[] = [
       { title: 'Central de Controle', to: '/central', icon: MapIcon, perfis: GESTAO },
       { title: 'Tarefas', to: '/tarefas', icon: ListChecksIcon },
       { title: 'Análise de Tarefas', to: '/analise', icon: ClipboardCheckIcon, perfis: GESTAO },
+      // Todos os perfis: o Funcionário consulta o saldo e registra retiradas; cadastro e entrada só a gestão.
+      { title: 'Estoque', to: '/estoque', icon: PackageIcon },
     ],
   },
   {
@@ -43,6 +45,10 @@ export const navGrupos: readonly NavGrupo[] = [
       { title: 'Equipamentos', to: '/cadastros/equipamentos', icon: WrenchIcon, perfis: GESTAO },
       { title: 'Equipes', to: '/cadastros/equipes', icon: UsersIcon, perfis: GESTAO },
     ],
+  },
+  {
+    titulo: 'Gestão',
+    itens: [{ title: 'Relatórios', to: '/relatorios', icon: ChartColumnIcon, perfis: GESTAO }],
   },
 ]
 

@@ -18,6 +18,9 @@ import { LoginPage } from '@/pages/login-page'
 import { NotFoundPage } from '@/pages/not-found-page'
 import { ManutencaoProgramadaFormPage } from '@/pages/manutencao-programada-form-page'
 import { ManutencoesProgramadasPage } from '@/pages/manutencoes-programadas-page'
+import { RelatoriosPage } from '@/pages/relatorios-page'
+import { EstoquePage } from '@/pages/estoque-page'
+import { ItemEstoqueFormPage } from '@/pages/item-estoque-form-page'
 
 /** Aplica os perfis do item de menu correspondente à rota. */
 function protegida(rota: string, pagina: ReactNode) {
@@ -55,10 +58,12 @@ export const router = createBrowserRouter([
         ],
       },
       { path: 'analise', element: protegida('/analise', <EmAnalisePage />) },
+      cadastro('/estoque', <EstoquePage />, <ItemEstoqueFormPage />),
       cadastro('/planejamento/manutencoes-programadas', <ManutencoesProgramadasPage />, <ManutencaoProgramadaFormPage />, 'nova'),
       cadastro('/planejamento/modelos-checklist', <ChecklistsPage />, <ChecklistFormPage />),
       cadastro('/cadastros/equipamentos', <EquipamentosPage />, <EquipamentoFormPage />),
       cadastro('/cadastros/equipes', <EquipesPage />, <EquipeFormPage />, 'nova'),
+      { path: 'relatorios', element: protegida('/relatorios', <RelatoriosPage />) },
       { path: '*', element: <NotFoundPage /> },
     ],
   },
