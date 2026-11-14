@@ -4,6 +4,7 @@ import { Building2Icon, CheckCircle2Icon, Loader2Icon } from 'lucide-react'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { Link, useSearchParams } from 'react-router'
+import { Logo } from '@/components/layout/logo'
 import { LimitedInput } from '@/components/shared/limited-input'
 import { LimitedTextarea } from '@/components/shared/limited-textarea'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -80,9 +81,8 @@ export function RelatarPage() {
   return (
     <div className="min-h-svh bg-muted/30">
       <header className="border-b bg-background">
-        <div className="mx-auto flex max-w-xl items-center gap-2 px-4 py-4 font-semibold">
-          <Building2Icon className="size-5 text-primary" aria-hidden />
-          SmartMall Ops AI
+        <div className="mx-auto flex max-w-xl items-center px-4 py-3">
+          <Logo className="max-w-40" />
         </div>
       </header>
       <main className="mx-auto max-w-xl px-4 py-6 sm:py-10">

@@ -8,7 +8,8 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/80",
+        // Ação principal com o gradiente da marca (azul → ciano).
+        default: "bg-primary bg-gradiente-primario text-primary-foreground shadow-sm shadow-primary/25 hover:brightness-110 disabled:shadow-none",
         outline:
           "border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
         secondary:

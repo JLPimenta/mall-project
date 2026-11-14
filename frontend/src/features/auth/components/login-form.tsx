@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { CircleAlertIcon, Loader2Icon } from 'lucide-react'
+import { ArrowRightIcon, CircleAlertIcon, Loader2Icon } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -48,6 +48,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
               id="email"
               type="email"
               autoComplete="username"
+              className="h-11 rounded-lg px-3.5"
               required
               maxLength={LIMITE_LOGIN.email}
               aria-invalid={!!errors.email}
@@ -61,6 +62,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
               id="senha"
               type="password"
               autoComplete="current-password"
+              className="h-11 rounded-lg px-3.5"
               required
               maxLength={LIMITE_LOGIN.senha}
               aria-invalid={!!errors.senha}
@@ -68,9 +70,10 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
             />
             <FieldError errors={[errors.senha]} />
           </Field>
-          <Button type="submit" disabled={entrar.isPending}>
+          <Button type="submit" size="lg" className="h-11 rounded-lg font-semibold" disabled={entrar.isPending}>
             {entrar.isPending && <Loader2Icon className="animate-spin" aria-hidden />}
             Entrar
+            {!entrar.isPending && <ArrowRightIcon aria-hidden data-icon="inline-end" />}
           </Button>
         </FieldGroup>
       </form>
