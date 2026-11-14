@@ -21,4 +21,6 @@
     <include file="db/changes/tarefa/20261116-1-execucao-tarefa.sql"/>
     <include file="db/changes/chamado/20261114-4-cria-chamado.sql"/>
     <include file="db/changes/chamado/20261114-5-seed-local-qr.sql" context="dev"/>
+    <include file="db/changes/ausencia/20261117-1-cria-ausencia.sql"/>
+    <include file="db/changes/ausencia/20261117-2-seed-ausencia.sql" context="dev"/>
 </databaseChangeLog>

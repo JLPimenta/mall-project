@@ -12,14 +12,16 @@ import { CalendarioMes } from '@/features/tarefas/components/calendario-mes'
 import { DiaPainel } from '@/features/tarefas/components/dia-painel'
 import { LegendaSituacoes } from '@/features/tarefas/components/legenda-situacoes'
 import { IndicadoresTarefas } from '@/features/tarefas/components/indicadores-tarefas'
+import { KanbanTarefas } from '@/features/tarefas/components/kanban-tarefas'
+import { VisaoTarefas, type Visao } from '@/features/tarefas/components/visao-tarefas'
 import { useTarefas } from '@/features/tarefas/hooks'
 import { situacoes, type Situacao } from '@/features/tarefas/types'
 import { deIsoData, formatar, gradeDoMes, inicioDoMes, mesmoDia, paraIsoData } from '@/lib/datas'
 import { useFiltrosUrl } from '@/lib/filtros'
 import { useAgora } from '@/lib/use-agora'
 
-/** Dia selecionado e filtros ficam na URL: voltar de uma manutenção programada reabre Tarefas no mesmo ponto. */
-const PARAMETROS = ['dia', 'equipe', 'situacao'] as const
+/** Dia, filtros e visualização ficam na URL: voltar de uma manutenção programada reabre Tarefas no mesmo ponto. */
+const PARAMETROS = ['dia', 'equipe', 'situacao', 'visao'] as const
 
 export function TarefasPage() {
   const { data: usuario } = useSessao()
@@ -27,6 +29,7 @@ export function TarefasPage() {
   const hoje = useAgora()
   const parametros = useFiltrosUrl(PARAMETROS)
   const { dia, equipe, situacao } = parametros.valores
+  const visao: Visao = parametros.valores.visao === 'kanban' ? 'kanban' : 'calendario'
 
   const selecionado = /^\d{4}-\d{2}-\d{2}$/.test(dia) ? deIsoData(dia) : hoje
   const selecionar = (data: Date) => parametros.definir('dia', mesmoDia(data, hoje) ? '' : paraIsoData(data))
@@ -44,11 +47,21 @@ export function TarefasPage() {
   const mudarMes = (delta: number) => selecionar(new Date(mes.getFullYear(), mes.getMonth() + delta, 1))
   const tarefas = consulta.data ?? []
   const doDia = tarefas.filter((t) => mesmoDia(new Date(t.dataHoraPrevista), selecionado))
+  const doMes = tarefas.filter((t) => new Date(t.dataHoraPrevista).getMonth() === mes.getMonth())
   const filtrosAtivos = (equipe ? 1 : 0) + (situacao ? 1 : 0)
 
   return (
     <>
-      <PageHeader title="Tarefas" actions={gestao && <BotaoNovo para="/planejamento/manutencoes-programadas/nova">Programar manutenção</BotaoNovo>} />
+      <PageHeader
+        title="Tarefas"
+        actions={
+          <>
+            {/* Calendário é o padrão e não aparece na URL. */}
+            <VisaoTarefas valor={visao} onChange={(v) => parametros.definir('visao', v === 'kanban' ? v : '')} />
+            {gestao && <BotaoNovo para="/planejamento/manutencoes-programadas/nova">Programar manutenção</BotaoNovo>}
+          </>
+        }
+      />
 
       <IndicadoresTarefas />
 
@@ -97,6 +110,12 @@ export function TarefasPage() {
 
       {consulta.isError ? (
         <ErrorState onRetry={() => consulta.refetch()} />
+      ) : visao === 'kanban' ? (
+        consulta.isPending ? (
+          <Skeleton className="h-96 w-full" />
+        ) : (
+          <KanbanTarefas tarefas={doMes} situacao={(situacao || undefined) as Situacao | undefined} podeGerenciar={gestao} />
+        )
       ) : (
         <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
           {consulta.isPending ? (

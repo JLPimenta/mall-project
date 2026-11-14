@@ -1,4 +1,5 @@
 import { api, type Page } from '@/lib/api'
+import type { Ausencia, AusenciaRequest, Disponibilidade } from './disponibilidade'
 import type { Equipe, EquipeRequest, Funcionario } from './types'
 
 export const equipesApi = {
@@ -8,4 +9,7 @@ export const equipesApi = {
   atualizar: (id: string, dados: EquipeRequest) => api.put<Equipe>(`/equipe/${id}`, dados),
   excluir: (id: string) => api.delete(`/equipe/${id}`),
   funcionarios: () => api.get<Funcionario[]>('/usuario/funcionarios'),
+  disponibilidade: () => api.get<Disponibilidade[]>('/disponibilidade'),
+  registrarAusencia: (dados: AusenciaRequest) => api.post<Ausencia>('/ausencia', dados),
+  encerrarAusencia: (id: string) => api.post<void>(`/ausencia/${id}/encerrar`),
 }

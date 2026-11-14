@@ -72,6 +72,8 @@ public class SecurityConfiguration {
                         .requestMatchers(HttpMethod.POST, "/api/publico/chamado").permitAll()
                         .requestMatchers("/api/publico/**").denyAll()
                         .requestMatchers("/api/chamado", "/api/chamado/**").hasAnyRole(GESTAO)
+                        .requestMatchers("/api/central", "/api/central/**").hasAnyRole(GESTAO)
+                        .requestMatchers("/api/disponibilidade", "/api/ausencia", "/api/ausencia/**").hasAnyRole(GESTAO)
                         .requestMatchers("/api/checklist", "/api/checklist/**").hasAnyRole(GESTAO)
                         .requestMatchers("/api/equipamento", "/api/equipamento/**").hasAnyRole(GESTAO)
                         .requestMatchers("/api/equipe", "/api/equipe/**").hasAnyRole(GESTAO)
