@@ -60,6 +60,72 @@ test('QR preenche o local editável e registra foto sem login', async ({ page })
   }
 })
 
+test('abre a câmera, fotografa e encerra a captura ao fechar', async ({ page }) => {
+  const marca = marcaUnica()
+  marcas.push(marca)
+  await page.addInitScript(() => {
+    const canvas = document.createElement('canvas')
+    canvas.width = 640
+    canvas.height = 480
+    const contexto = canvas.getContext('2d')!
+    contexto.fillStyle = '#237a61'
+    contexto.fillRect(0, 0, canvas.width, canvas.height)
+    const stream = canvas.captureStream(10)
+    Object.defineProperty(navigator.mediaDevices, 'getUserMedia', {
+      configurable: true,
+      value: async () => {
+        ;(window as typeof window & { cameraTeste?: MediaStream }).cameraTeste = stream
+        return stream
+      },
+    })
+  })
+  await page.goto('/relatar')
+  await page.getByRole('button', { name: 'Abrir câmera' }).click()
+  await expect(page.getByRole('dialog', { name: 'Tirar foto' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Fotografar' })).toBeEnabled()
+  await page.getByRole('button', { name: 'Fotografar' }).click()
+  await expect(page.getByRole('dialog', { name: 'Tirar foto' })).toBeHidden()
+  await expect(page.getByText(/foto-\d+\.jpg/)).toBeVisible()
+  expect(await page.evaluate(() => (window as typeof window & { cameraTeste: MediaStream }).cameraTeste.getVideoTracks()[0].readyState)).toBe('ended')
+  await page.getByLabel('Local', { exact: true }).fill('Corredor Leste')
+  await page.getByLabel('O que aconteceu?').fill(`${marca} Vazamento no corredor`)
+  const envio = page.waitForResponse((resposta) => resposta.url().endsWith('/api/publico/chamado') && resposta.request().method() === 'POST')
+  await page.getByRole('button', { name: 'Enviar relato' }).click()
+  const { id } = await (await envio).json() as { id: string }
+  const admin = await apiComo(new URL(page.url()).origin, contas.administrador)
+  try {
+    const detalhe = await admin.get(`/api/chamado/${id}`)
+    expect(detalhe.ok(), await detalhe.text()).toBe(true)
+    expect(await detalhe.json()).toMatchObject({ midia: { tipo: 'image/jpeg' } })
+  } finally {
+    await admin.dispose()
+  }
+})
+
+test('informa quando o acesso à câmera é negado', async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator.mediaDevices, 'getUserMedia', {
+      configurable: true,
+      value: async () => { throw new DOMException('Acesso negado', 'NotAllowedError') },
+    })
+  })
+  await page.goto('/relatar')
+  await page.getByRole('button', { name: 'Abrir câmera' }).click()
+  await expect(page.getByRole('dialog', { name: 'Tirar foto' }).getByRole('alert')).toHaveText('Permita o acesso à câmera nas configurações do navegador e tente novamente.')
+  await page.getByRole('button', { name: 'Cancelar' }).click()
+  await expect(page.getByRole('button', { name: 'Escolher arquivo' })).toBeVisible()
+})
+
+test('orienta usar HTTPS quando a API da câmera não está disponível', async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, 'mediaDevices', { configurable: true, value: undefined })
+  })
+  await page.goto('/relatar')
+  await page.getByRole('button', { name: 'Abrir câmera' }).click()
+  await expect(page.getByRole('dialog', { name: 'Tirar foto' }).getByRole('alert')).toContainText('abra esta página por HTTPS ou localhost')
+  await expect(page.getByRole('button', { name: 'Fotografar' })).toBeDisabled()
+})
+
 test('aceita local manual quando o QR é desconhecido', async ({ page }) => {
   const marca = marcaUnica()
   marcas.push(marca)

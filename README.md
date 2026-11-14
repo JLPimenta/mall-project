@@ -60,6 +60,8 @@ O nginx aceita até 21 MB no envio de chamado público (`POST /api/publico/chama
 
 No navegador da máquina, abra `http://localhost:5173/relatar?local=banheiro-norte`. Para um QR Code lido no celular, use um domínio ou IP acessível ao aparelho, como `http://<IP-da-maquina>:5173/relatar?local=banheiro-norte` no modo com containers; `localhost` no celular aponta para o próprio aparelho. O visitante informa o problema e pode enviar mídia sem login; o local vem preenchido pelo código da URL. A equipe revisa o pré-cadastro em `/chamados` com perfil Supervisor ou Administrador. A seed de desenvolvimento também oferece `praca-alimentacao` e `entrada`.
 
+No formulário, **Abrir câmera** pede permissão ao navegador, mostra a prévia e permite **Fotografar**; **Escolher arquivo** abre a galeria ou o explorador para anexar foto/vídeo. A câmera do navegador funciona em `localhost` ou HTTPS. Se o QR Code abrir um endereço `http://<IP>` no celular, o formulário e o anexo continuam disponíveis, mas a câmera mostra uma orientação para usar HTTPS. Para usar a câmera pelo QR Code, gere os códigos com a URL HTTPS definitiva.
+
 Os QR Codes de demonstração estão em `docs/qrcodes/demo/` (PNG para impressão e SVG vetorial). Eles apontam para o IP Wi-Fi desta máquina no momento da geração (`192.168.10.111:5173`); use-os apenas na mesma rede, com a stack em containers ativa. Esse IP pode mudar. Confira `enderecos.json` antes de imprimir.
 
 Para gerar os três QR Codes com o endereço definitivo do sistema:
