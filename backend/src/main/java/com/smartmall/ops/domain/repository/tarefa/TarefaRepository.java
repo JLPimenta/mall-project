@@ -55,9 +55,12 @@ public interface TarefaRepository extends BaseRepository<Tarefa> {
     /** Tarefas previstas em [de, ate) reprovadas ao menos uma vez na análise. equipeId nulo = todas. */
     @Query("""
             select distinct h.tarefa.id from TarefaHistorico h
+            left join h.tarefa.programada p
+            left join p.equipe pe
+            left join h.tarefa.equipe te
             where h.acao = 'REPROVADA'
               and h.tarefa.dataHoraPrevista >= :de and h.tarefa.dataHoraPrevista < :ate
-              and (:equipeId is null or h.tarefa.programada.equipe.id = :equipeId)
+              and (:equipeId is null or coalesce(te.id, pe.id) = :equipeId)
             """)
     List<String> idsComReprovacao(LocalDateTime de, LocalDateTime ate, String equipeId);
 

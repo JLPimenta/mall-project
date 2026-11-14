@@ -55,17 +55,17 @@ public class RelatorioService implements IRelatorioService {
         var tarefas = tarefaRepository.buscar(de, ate, null, filtro.getEquipeId(), null);
         Set<String> reprovadas = new HashSet<>(tarefaRepository.idsComReprovacao(de, ate, filtro.getEquipeId()));
 
-        var porEquipe = agrupar(tarefas, t -> t.getProgramada().getEquipe(), Equipe::getId).values().stream()
+        var porEquipe = agrupar(tarefas, Tarefa::equipeEfetiva, Equipe::getId).values().stream()
                 .map(grupo -> {
-                    var e = grupo.getFirst().getProgramada().getEquipe();
+                    var e = grupo.getFirst().equipeEfetiva();
                     return new PorEquipe(e.getId(), e.getNome(), contar(grupo, agora, reprovadas));
                 })
                 .sorted(Comparator.comparing(PorEquipe::nome))
                 .toList();
 
-        var porEquipamento = agrupar(tarefas, t -> t.getProgramada().getEquipamento(), Equipamento::getId).values().stream()
+        var porEquipamento = agrupar(tarefas, Tarefa::equipamentoEfetivo, Equipamento::getId).values().stream()
                 .map(grupo -> {
-                    var e = grupo.getFirst().getProgramada().getEquipamento();
+                    var e = grupo.getFirst().equipamentoEfetivo();
                     return new PorEquipamento(e.getId(), e.getCodigo(), e.getNome(), e.getCondicao(), contar(grupo, agora, reprovadas));
                 })
                 .sorted(Comparator.comparing(PorEquipamento::codigo))

@@ -1,10 +1,12 @@
 package com.smartmall.ops.domain.service.relatorio;
 
 import com.smartmall.ops.domain.core.exception.DomainException;
+import com.smartmall.ops.domain.entity.Checklist;
 import com.smartmall.ops.domain.entity.Equipamento;
 import com.smartmall.ops.domain.entity.Equipe;
 import com.smartmall.ops.domain.entity.ManutencaoProgramada;
 import com.smartmall.ops.domain.entity.Piso;
+import com.smartmall.ops.domain.entity.PlanoAcao;
 import com.smartmall.ops.domain.entity.Tarefa;
 import com.smartmall.ops.domain.entity.enums.CondicaoEquipamento;
 import com.smartmall.ops.domain.entity.enums.StatusTarefa;
@@ -175,5 +177,32 @@ class RelatorioServiceTest {
 
         assertThat(c.atrasadas()).isEqualTo(1);
         assertThat(c.agendadas()).isZero();
+    }
+
+    @Test
+    void incluiTarefasDeOrigemChamadoSemNullPointer() {
+        var piso = new Piso("L1", "Piso L1", 1);
+        var equipeGeral = new Equipe("Geral", List.of());
+        equipeGeral.setId("eq-geral");
+        var equipChamado = new Equipamento("EQP-C01", "Equipamento chamado", null, piso, "Hall", CondicaoEquipamento.OPERANDO);
+        equipChamado.setId("e-chamado");
+
+        var plano = new PlanoAcao();
+        plano.setId("plano-1");
+        var tarefaChamado = new Tarefa(plano, equipeGeral, equipChamado, null, piso, "Hall", AGORA.plusDays(1), 30);
+        tarefaChamado.setId("tc1");
+
+        when(repository.buscar(DE.atStartOfDay(), ATE.plusDays(1).atStartOfDay(), null, null, null))
+                .thenReturn(List.of(
+                        tarefa("t1", elevador, AGORA.minusDays(1), StatusTarefa.CONCLUIDA),
+                        tarefaChamado));
+        when(repository.idsComReprovacao(DE.atStartOfDay(), ATE.plusDays(1).atStartOfDay(), null))
+                .thenReturn(List.of());
+
+        var r = service.tarefas(filtro(DE, ATE));
+
+        assertThat(r.totais().total()).isEqualTo(2);
+        assertThat(r.porEquipe()).extracting(e -> e.nome()).containsExactly("Elevadores", "Geral");
+        assertThat(r.porEquipamento()).extracting(e -> e.codigo()).containsExactly("ELV-E1", "EQP-C01");
     }
 }
