@@ -23,11 +23,11 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
-        {/* Expandido: logo completo num cartão branco. Recolhido: só o ícone. */}
-        <div className="rounded-lg bg-white px-3 py-2 group-data-[collapsible=icon]:hidden">
-          <Logo className="mx-auto max-h-12 w-auto" />
+        {/* Versão clara sobre o gradiente do menu. Expandido: logo completo. Recolhido: só o ícone. */}
+        <div className="px-2 py-2 group-data-[collapsible=icon]:hidden">
+          <Logo tom="claro" className="max-h-11 w-auto" />
         </div>
-        <LogoIcone className="hidden group-data-[collapsible=icon]:block" />
+        <LogoIcone tom="claro" className="hidden group-data-[collapsible=icon]:block" />
       </SidebarHeader>
       <SidebarContent>
         <nav aria-label="Principal">

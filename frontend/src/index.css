@@ -28,6 +28,9 @@
     --color-success: var(--success);
     --color-warning: var(--warning);
     --color-andamento: var(--andamento);
+    --color-marca-ciano: var(--marca-ciano);
+    --color-marca-navy: var(--marca-navy);
+    --color-marca-azul: var(--marca-azul);
     --color-accent-foreground: var(--accent-foreground);
     --color-accent: var(--accent);
     --color-muted-foreground: var(--muted-foreground);
@@ -52,14 +55,15 @@
 }
 
 :root {
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.145 0 0);
+    /* Fundo levemente azulado e textos em navy, como na identidade do login. */
+    --background: oklch(0.985 0.006 240);
+    --foreground: oklch(0.22 0.04 258);
     --card: oklch(1 0 0);
-    --card-foreground: oklch(0.145 0 0);
+    --card-foreground: oklch(0.22 0.04 258);
     --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.145 0 0);
-    /* Identidade do protótipo: navy #061a37, azul #087cbe, ciano #36c6ea */
-    --primary: oklch(0.56 0.14 245);
+    --popover-foreground: oklch(0.22 0.04 258);
+    /* Identidade: navy #061a37 → azul #0a3c70 (painéis), azul #0b72b9 (ação) e ciano #6ad6f2 (destaque). */
+    --primary: oklch(0.55 0.14 240);
     --primary-foreground: oklch(0.985 0 0);
     --secondary: oklch(0.97 0.015 230);
     --secondary-foreground: oklch(0.26 0.06 255);
@@ -72,23 +76,30 @@
     --warning: oklch(0.78 0.15 72);
     /* Tarefa em execução: violeta, distinto do azul de "agendada" e do âmbar de "em análise". */
     --andamento: oklch(0.52 0.19 295);
-    --border: oklch(0.92 0.015 240);
-    --input: oklch(0.92 0.015 240);
-    --ring: oklch(0.77 0.12 220);
+    --border: oklch(0.92 0.02 235);
+    --input: oklch(0.9 0.025 235);
+    --ring: oklch(0.72 0.13 220);
     --chart-1: oklch(0.87 0 0);
     --chart-2: oklch(0.556 0 0);
     --chart-3: oklch(0.439 0 0);
     --chart-4: oklch(0.371 0 0);
     --chart-5: oklch(0.269 0 0);
     --radius: 0.625rem;
-    --sidebar: oklch(0.21 0.06 260);
-    --sidebar-foreground: oklch(0.93 0.02 240);
-    --sidebar-primary: oklch(0.77 0.12 220);
-    --sidebar-primary-foreground: oklch(0.21 0.06 260);
-    --sidebar-accent: oklch(0.3 0.08 255);
+    --sidebar: oklch(0.2 0.065 258);
+    --sidebar-foreground: oklch(0.94 0.02 235);
+    --sidebar-primary: oklch(0.83 0.11 212);
+    --sidebar-primary-foreground: oklch(0.2 0.065 258);
+    --sidebar-accent: oklch(0.3 0.085 250);
     --sidebar-accent-foreground: oklch(0.985 0 0);
-    --sidebar-border: oklch(0.3 0.06 258);
-    --sidebar-ring: oklch(0.77 0.12 220);
+    --sidebar-border: oklch(0.31 0.07 252);
+    --sidebar-ring: oklch(0.83 0.11 212);
+    /* Marca: gradiente dos painéis escuros, brilho radial e ciano de destaque. */
+    --marca-navy: oklch(0.2 0.065 258);
+    --marca-azul: oklch(0.33 0.1 248);
+    --marca-brilho: oklch(0.52 0.11 228);
+    --marca-ciano: oklch(0.83 0.11 212);
+    /* Fim do gradiente do botão principal: claro o bastante para o efeito, escuro o bastante para o texto branco. */
+    --gradiente-fim: oklch(0.64 0.13 222);
 }
 
 .dark {
@@ -126,7 +137,24 @@
     --sidebar-ring: oklch(0.556 0 0);
 }
 
+/* Painel escuro da marca (login): navy → azul com brilho radial. */
+@utility bg-painel-marca {
+    background-image:
+        radial-gradient(55% 40% at 62% 32%, color-mix(in oklch, var(--marca-brilho) 55%, transparent), transparent 75%),
+        linear-gradient(165deg, var(--marca-navy) 0%, var(--marca-azul) 100%);
+}
+
+/* Botão principal: azul → ciano. */
+@utility bg-gradiente-primario {
+    background-image: linear-gradient(90deg, var(--primary), var(--gradiente-fim));
+}
+
 @layer base {
+  /* Menu lateral com o mesmo gradiente vertical dos painéis da marca. */
+  [data-slot="sidebar-inner"] {
+    background-image: linear-gradient(180deg, var(--marca-navy) 0%, var(--marca-azul) 100%);
+  }
+
   * {
     @apply border-border outline-ring/50;
     }

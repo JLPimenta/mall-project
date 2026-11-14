@@ -8,16 +8,16 @@ async function navegacao(page: Page, isMobile: boolean) {
 }
 
 test.describe('Tela de login', () => {
-  test('apresenta os módulos e marca as análises com IA como em desenvolvimento', async ({ page, isMobile }) => {
+  test('mostra o logo, o título e, em telas largas, a frase da marca', async ({ page, isMobile }) => {
     await page.goto('/login')
     await expect(page.getByRole('img', { name: 'SmartMall Ops IA' })).toBeVisible()
-    test.skip(isMobile, 'O painel de apresentação só aparece em telas largas.')
-
-    await expect(page.getByRole('list', { name: 'Módulos do sistema' }).getByRole('listitem')).toHaveCount(5)
-    const ia = page.getByRole('list', { name: 'Análises com IA em desenvolvimento' })
-    await expect(ia.getByRole('listitem')).toHaveCount(3)
-    await expect(page.getByText('Em desenvolvimento', { exact: true })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1, name: 'Entrar no sistema' })).toBeVisible()
     await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1)
+    await expect(page.getByRole('heading', { level: 2, name: 'Perfis de demonstração' })).toBeVisible()
+    test.skip(isMobile, 'O painel da marca só aparece em telas largas.')
+
+    await expect(page.getByText('Decisões operacionais mais claras, em tempo real.')).toBeVisible()
+    await expect(page.getByText('Centralize ocorrências, equipes, ativos e alertas em uma única visão operacional.')).toBeVisible()
   })
 
   test('rota interna sem sessão leva ao login', async ({ page }) => {

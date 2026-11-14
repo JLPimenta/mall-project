@@ -1,5 +1,4 @@
 import { Button } from '@/components/ui/button'
-import { FieldSeparator } from '@/components/ui/field'
 import { perfilLabel, type Perfil } from '../types'
 
 /** Contas da seed de desenvolvimento (backend/src/main/resources/db/changes/usuario). */
@@ -17,17 +16,18 @@ type DemoAccessProps = {
 
 export function DemoAccess({ disabled, onSelect }: DemoAccessProps) {
   return (
-    <section aria-labelledby="demo-titulo" className="grid gap-4">
-      <FieldSeparator>
-        <span id="demo-titulo">Acesso de demonstração</span>
-      </FieldSeparator>
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+    <section aria-labelledby="demo-titulo" className="grid gap-3 border-t pt-5">
+      <h2 id="demo-titulo" className="text-sm font-semibold">
+        Perfis de demonstração
+      </h2>
+      <div className="flex flex-wrap gap-2">
         {contas.map((conta) => (
           <Button
             key={conta.perfil}
             type="button"
             variant="outline"
             size="sm"
+            className="rounded-full border-primary/20 bg-accent px-3 font-medium text-primary hover:bg-primary/10"
             disabled={disabled}
             onClick={() => onSelect(conta.email, SENHA_DEMO)}
           >
