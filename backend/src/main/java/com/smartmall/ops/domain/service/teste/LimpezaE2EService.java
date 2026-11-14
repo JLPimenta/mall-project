@@ -7,6 +7,8 @@ import com.smartmall.ops.domain.repository.manutencao.ManutencaoProgramadaReposi
 import com.smartmall.ops.domain.repository.tarefa.TarefaEvidenciaRepository;
 import com.smartmall.ops.domain.repository.tarefa.TarefaRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.regex.Pattern;
@@ -26,6 +28,8 @@ public class LimpezaE2EService {
     private final TarefaRepository tarefaRepository;
     private final TarefaEvidenciaRepository evidenciaRepository;
     private final ArquivoRepository arquivoRepository;
+    @Autowired(required = false)
+    private JdbcTemplate jdbc;
 
     public LimpezaE2EService(ManutencaoProgramadaRepository programadaRepository, TarefaRepository tarefaRepository,
                              TarefaEvidenciaRepository evidenciaRepository, ArquivoRepository arquivoRepository) {
@@ -49,6 +53,25 @@ public class LimpezaE2EService {
             arquivoRepository.deleteAllByIdInBatch(arquivos);
             programadaRepository.delete(programada);
         }
-        return programadas.size();
+        int chamados = 0;
+        if (jdbc != null) {
+            var ids = jdbc.queryForList("select id from chamado where descricao like ?", String.class, "%" + marca + "%");
+            for (String id : ids) {
+                var arquivos = jdbc.queryForList("""
+                        select e.arquivo_id from tarefa_evidencia e
+                        join tarefa t on t.id=e.tarefa_id
+                        join plano_acao p on p.id=t.plano_acao_id where p.chamado_id=?
+                        """, String.class, id);
+                arquivos.addAll(jdbc.queryForList("select arquivo_id from chamado_midia where chamado_id=?", String.class, id));
+                jdbc.update("delete from tarefa where plano_acao_id in (select id from plano_acao where chamado_id=?)", id);
+                jdbc.update("delete from plano_acao where chamado_id=?", id);
+                jdbc.update("delete from chamado_historico where chamado_id=?", id);
+                jdbc.update("delete from chamado_midia where chamado_id=?", id);
+                for (String arquivoId : arquivos) jdbc.update("delete from arquivo where id=?", arquivoId);
+                jdbc.update("delete from chamado where id=?", id);
+                chamados++;
+            }
+        }
+        return programadas.size() + chamados;
     }
 }

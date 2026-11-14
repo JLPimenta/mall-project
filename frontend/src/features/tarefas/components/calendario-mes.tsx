@@ -114,7 +114,7 @@ export function CalendarioMes({ mes, selecionado, tarefas, onSelecionar }: Calen
                             m.status === 'CANCELADA' && 'line-through',
                           )}
                         >
-                          {formatar.hora(m.dataHoraPrevista)} {m.equipamento.codigo}
+                          {formatar.hora(m.dataHoraPrevista)} {m.equipamento?.codigo ?? 'Chamado'}
                         </span>
                       ))}
                       {itens.length > MAX_ROTULOS && <span className="px-1 text-[11px] text-muted-foreground">+{itens.length - MAX_ROTULOS}</span>}

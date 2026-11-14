@@ -12,7 +12,7 @@ import { useAgora } from '@/lib/use-agora'
 import { cn } from '@/lib/utils'
 import { faixaHorario } from '../formatos'
 import { useCancelarTarefa, useRestaurarTarefa } from '../hooks'
-import { origemLabel, situacaoDe, situacaoInfo, type Tarefa } from '../types'
+import { localTarefa, origemLabel, rotaOrigemTarefa, situacaoDe, situacaoInfo, tituloTarefa, type Tarefa } from '../types'
 
 type TarefaItemProps = {
   tarefa: Tarefa
@@ -32,7 +32,8 @@ export function TarefaItem({ tarefa: t, podeGerenciar, mostrarData, compacto }: 
   const agora = useAgora()
   const origem = useOrigemAtual()
   const futura = new Date(t.dataHoraPrevista) > agora
-  const titulo = `${t.equipamento.codigo} · ${t.equipamento.nome}`
+  const titulo = tituloTarefa(t)
+  const rotaOrigem = rotaOrigemTarefa(t)
   const quando = `${formatar.data(t.dataHoraPrevista)}, ${faixaHorario(t.dataHoraPrevista, t.duracaoMinutos)}`
 
   const executar = (acao: typeof cancelar, sucesso: string) =>
@@ -69,20 +70,19 @@ export function TarefaItem({ tarefa: t, podeGerenciar, mostrarData, compacto }: 
         </Link>
         {!compacto && (
           <span className="truncate text-xs text-muted-foreground">
-            {t.piso} · {t.localizacao} · {t.equipe.nome}
+            {localTarefa(t)} · {t.equipe.nome}
             {t.responsavel && ` · ${t.responsavel.nome}`}
           </span>
         )}
         <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
           <StatusBadge tom={situacao.tom}>{situacao.rotulo}</StatusBadge>
-          {/* Origem: hoje só manutenção programada; com chamados, o plano de ação também gera tarefas. */}
           {!compacto &&
-            (podeGerenciar ? (
+            (podeGerenciar && rotaOrigem ? (
               <Link
-                to={`/planejamento/manutencoes-programadas/${t.manutencaoProgramadaId}`}
+                to={rotaOrigem}
                 state={origem}
                 className="relative z-10 text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-                aria-label={`Abrir a manutenção programada de ${titulo}`}
+                aria-label={`Abrir ${t.origem === 'CHAMADO' ? 'o chamado' : 'a manutenção programada'} de ${titulo}`}
               >
                 {origemLabel[t.origem]}
               </Link>
@@ -112,7 +112,7 @@ export function TarefaItem({ tarefa: t, podeGerenciar, mostrarData, compacto }: 
         open={confirmando}
         onOpenChange={setConfirmando}
         title="Cancelar esta tarefa?"
-        description={`${titulo} — ${quando}. As demais tarefas da manutenção programada não mudam.`}
+        description={`${titulo} — ${quando}. O cancelamento afeta apenas esta tarefa.`}
         confirmLabel="Cancelar tarefa"
         destructive
         onConfirm={() => executar(cancelar, 'Tarefa cancelada.')}

@@ -8,6 +8,13 @@ import { camposSemLimite } from './support/limites'
  * Ao criar uma tela com formulário, inclua-a aqui.
  */
 test.describe('Todo campo tem limite', () => {
+  test('relato público sem login', async ({ page }) => {
+    await page.goto('/relatar?local=banheiro-norte')
+    await expect(page.getByRole('heading', { name: 'Relatar ocorrência' })).toBeVisible()
+
+    expect(await camposSemLimite(page)).toEqual([])
+  })
+
   test('login', async ({ page }) => {
     await page.goto('/login')
 
@@ -32,6 +39,7 @@ test.describe('Todo campo tem limite', () => {
     '/cadastros/equipes',
     '/planejamento/manutencoes-programadas',
     '/planejamento/modelos-checklist',
+    '/chamados',
   ]) {
     test(`tela ${tela}`, async ({ page }) => {
       await entrar(page, contas.supervisor)
@@ -50,4 +58,15 @@ test.describe('Todo campo tem limite', () => {
 
     expect(await camposSemLimite(page)).toEqual([])
   })
+
+  for (const tela of ['/cadastros/usuarios', '/cadastros/usuarios/novo']) {
+    test(`tela ${tela}`, async ({ page }) => {
+      await entrar(page, contas.administrador)
+      await page.goto(tela)
+      await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+      await page.waitForLoadState('networkidle')
+
+      expect(await camposSemLimite(page)).toEqual([])
+    })
+  }
 })

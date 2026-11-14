@@ -1,6 +1,7 @@
 package com.smartmall.ops.domain.service.tarefa;
 
 import com.smartmall.ops.domain.core.exception.DomainException;
+import com.smartmall.ops.domain.service.chamado.CicloChamadoService;
 import com.smartmall.ops.domain.entity.Arquivo;
 import com.smartmall.ops.domain.entity.ChecklistItem;
 import com.smartmall.ops.domain.entity.Tarefa;
@@ -20,6 +21,7 @@ import com.smartmall.ops.domain.repository.tarefa.TarefaRepository;
 import com.smartmall.ops.domain.repository.usuario.UsuarioRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
@@ -46,13 +48,21 @@ public class ExecucaoTarefaService implements IExecucaoTarefaService {
     private final TarefaEvidenciaRepository evidenciaRepository;
     private final UsuarioRepository usuarioRepository;
     private final Clock clock;
+    private final CicloChamadoService cicloChamado;
 
     public ExecucaoTarefaService(TarefaRepository repository, TarefaEvidenciaRepository evidenciaRepository,
                                  UsuarioRepository usuarioRepository, Clock clock) {
+        this(repository, evidenciaRepository, usuarioRepository, clock, null);
+    }
+
+    @Autowired
+    public ExecucaoTarefaService(TarefaRepository repository, TarefaEvidenciaRepository evidenciaRepository,
+                                 UsuarioRepository usuarioRepository, Clock clock, CicloChamadoService cicloChamado) {
         this.repository = repository;
         this.evidenciaRepository = evidenciaRepository;
         this.usuarioRepository = usuarioRepository;
         this.clock = clock;
+        this.cicloChamado = cicloChamado;
     }
 
     private LocalDateTime agora() {
@@ -83,14 +93,17 @@ public class ExecucaoTarefaService implements IExecucaoTarefaService {
             throw new DomainException("Só tarefas agendadas podem ser assumidas.");
         }
         if (!membro(tarefa, ator)) {
-            throw new DomainException("Só membros da equipe %s podem assumir esta tarefa.", tarefa.getProgramada().getEquipe().getNome());
+            throw new DomainException("Só membros da equipe %s podem assumir esta tarefa.", tarefa.equipeEfetiva().getNome());
         }
         tarefa.setResponsavel(usuarioRepository.getReferenceById(ator.id()));
         tarefa.getItens().clear();
-        tarefa.getProgramada().getChecklist().getItens().stream()
-                .sorted(Comparator.comparing(ChecklistItem::getOrdem))
-                .forEach(modelo -> tarefa.getItens().add(TarefaItem.copiaDe(modelo, tarefa)));
+        if (tarefa.checklistEfetivo() != null) {
+            tarefa.checklistEfetivo().getItens().stream()
+                    .sorted(Comparator.comparing(ChecklistItem::getOrdem))
+                    .forEach(modelo -> tarefa.getItens().add(TarefaItem.copiaDe(modelo, tarefa)));
+        }
         tarefa.mudarStatus(StatusTarefa.EM_EXECUCAO, AcaoTarefa.ASSUMIDA, tarefa.getResponsavel(), agora(), null);
+        if (cicloChamado != null) cicloChamado.iniciada(tarefa, ator.id());
         return montar(gravar(tarefa), ator);
     }
 
@@ -159,7 +172,9 @@ public class ExecucaoTarefaService implements IExecucaoTarefaService {
             }
         }
         var pendentes = evidenciaRepository.findByTarefaIdOrderByDataCriacaoAsc(id).stream().filter(e -> e.getEnvio() == null).toList();
-        if (pendentes.isEmpty()) {
+        if (tarefa.getPlanoAcao() != null && (tarefa.getObservacao() == null || tarefa.getObservacao().isBlank()))
+            throw new DomainException("Registre a resolução do chamado.");
+        if (pendentes.isEmpty() && tarefa.getProgramada() != null) {
             throw new DomainException(tarefa.getEnvios() == 0
                     ? "Anexe ao menos uma imagem como evidência."
                     : "Anexe ao menos uma imagem nova para reenviar.");
@@ -180,6 +195,7 @@ public class ExecucaoTarefaService implements IExecucaoTarefaService {
         var tarefa = paraAvaliar(id, ator, "aprovadas");
         tarefa.mudarStatus(StatusTarefa.CONCLUIDA, AcaoTarefa.APROVADA, usuarioRepository.getReferenceById(ator.id()), agora(),
                 texto(request.getObservacao()));
+        if (cicloChamado != null) cicloChamado.encerrada(tarefa, ator.id());
         return montar(gravar(tarefa), ator);
     }
 
@@ -232,7 +248,7 @@ public class ExecucaoTarefaService implements IExecucaoTarefaService {
     }
 
     private static boolean membro(Tarefa tarefa, Ator ator) {
-        return tarefa.getProgramada().getEquipe().getMembros().stream().anyMatch(u -> u.getId().equals(ator.id()));
+        return tarefa.equipeEfetiva().getMembros().stream().anyMatch(u -> u.getId().equals(ator.id()));
     }
 
     private static boolean responsavel(Tarefa tarefa, Ator ator) {
@@ -294,8 +310,8 @@ public class ExecucaoTarefaService implements IExecucaoTarefaService {
     // ---- resposta
 
     private TarefaDetalheResponse montar(Tarefa tarefa, Ator ator) {
-        List<TarefaDetalheResponse.Item> itens = tarefa.getItens().isEmpty()
-                ? tarefa.getProgramada().getChecklist().getItens().stream()
+        List<TarefaDetalheResponse.Item> itens = tarefa.getItens().isEmpty() && tarefa.checklistEfetivo() != null
+                ? tarefa.checklistEfetivo().getItens().stream()
                     .sorted(Comparator.comparing(ChecklistItem::getOrdem))
                     .map(m -> new TarefaDetalheResponse.Item(m.getId(), m.getOrdem(), m.getPergunta(), m.getTipoResposta(),
                             m.getObrigatorio(), m.getMaxCaracteres(), null))

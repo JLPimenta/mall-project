@@ -18,4 +18,17 @@ public interface UsuarioRepository extends BaseRepository<Usuario> {
     boolean existeEmail(String email, String id);
 
     List<Usuario> findByPerfilAndAtivoTrueOrderByNome(Perfil perfil);
+
+    long countByPerfilAndAtivoTrue(Perfil perfil);
+
+    /** Referências históricas ou de equipe impedem a exclusão física do usuário. */
+    @Query(value = """
+            SELECT EXISTS (
+                SELECT 1 FROM equipe_membro WHERE usuario_id = :id
+                UNION ALL SELECT 1 FROM tarefa WHERE responsavel_id = :id
+                UNION ALL SELECT 1 FROM tarefa_evidencia WHERE enviada_por_id = :id
+                UNION ALL SELECT 1 FROM tarefa_historico WHERE usuario_id = :id
+            )
+            """, nativeQuery = true)
+    boolean possuiVinculos(String id);
 }

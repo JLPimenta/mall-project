@@ -23,6 +23,7 @@ public class TarefaResponse {
     private OrigemTarefa origem;
     /** Manutenção programada que gerou a tarefa (origem MANUTENCAO_PROGRAMADA). */
     private String manutencaoProgramadaId;
+    private String chamadoId;
     private LocalDateTime dataHoraPrevista;
     private Integer duracaoMinutos;
     private StatusTarefa status;
@@ -41,21 +42,25 @@ public class TarefaResponse {
 
     public static TarefaResponse de(Tarefa tarefa, LocalDateTime agora) {
         var programada = tarefa.getProgramada();
-        var equipamento = programada.getEquipamento();
+        var equipamento = tarefa.equipamentoEfetivo();
+        var checklist = tarefa.checklistEfetivo();
+        var equipe = tarefa.equipeEfetiva();
+        var piso = tarefa.getPiso() != null ? tarefa.getPiso() : equipamento == null ? null : equipamento.getPiso();
         return TarefaResponse.builder()
                 .id(tarefa.getId())
                 .origem(tarefa.getOrigem())
-                .manutencaoProgramadaId(programada.getId())
+                .manutencaoProgramadaId(programada == null ? null : programada.getId())
+                .chamadoId(tarefa.getPlanoAcao() == null ? null : tarefa.getPlanoAcao().getChamado().getId())
                 .dataHoraPrevista(tarefa.getDataHoraPrevista())
-                .duracaoMinutos(programada.getDuracaoMinutos())
+                .duracaoMinutos(tarefa.duracaoEfetiva())
                 .status(tarefa.getStatus())
                 .atrasada(tarefa.isAtrasada(agora))
-                .frequencia(programada.getFrequencia())
-                .equipamento(new Resumo(equipamento.getId(), equipamento.getNome(), equipamento.getCodigo()))
-                .piso(equipamento.getPiso().getNome())
-                .localizacao(equipamento.getLocalizacao())
-                .checklist(new Resumo(programada.getChecklist().getId(), programada.getChecklist().getNome(), null))
-                .equipe(new Resumo(programada.getEquipe().getId(), programada.getEquipe().getNome(), null))
+                .frequencia(programada == null ? null : programada.getFrequencia())
+                .equipamento(equipamento == null ? null : new Resumo(equipamento.getId(), equipamento.getNome(), equipamento.getCodigo()))
+                .piso(piso == null ? null : piso.getNome())
+                .localizacao(tarefa.getLocalizacao() == null ? equipamento == null ? null : equipamento.getLocalizacao() : tarefa.getLocalizacao())
+                .checklist(checklist == null ? null : new Resumo(checklist.getId(), checklist.getNome(), null))
+                .equipe(new Resumo(equipe.getId(), equipe.getNome(), null))
                 .responsavel(TarefaDetalheResponse.resumo(tarefa.getResponsavel()))
                 .envios(tarefa.getEnvios())
                 .ultimoEnvio(tarefa.getUltimoEnvio())

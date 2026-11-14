@@ -32,14 +32,14 @@ function buildUrl(path: string, params?: QueryParams) {
   return url
 }
 
-async function request<T>(method: string, path: string, body?: unknown, params?: QueryParams): Promise<T> {
+async function request<T>(method: string, path: string, body?: unknown, params?: QueryParams, extraHeaders?: Record<string, string>): Promise<T> {
   let response: Response
   // FormData (upload): o navegador define o Content-Type com o boundary do multipart.
   const formulario = body instanceof FormData
   try {
     response = await fetch(buildUrl(path, params), {
       method,
-      headers: body && !formulario ? { 'Content-Type': 'application/json' } : undefined,
+      headers: { ...(body && !formulario ? { 'Content-Type': 'application/json' } : {}), ...extraHeaders },
       body: formulario ? body : body ? JSON.stringify(body) : undefined,
     })
   } catch {
@@ -59,5 +59,5 @@ export const api = {
   post: <T>(path: string, body?: unknown) => request<T>('POST', path, body),
   put: <T>(path: string, body: unknown) => request<T>('PUT', path, body),
   delete: <T = void>(path: string) => request<T>('DELETE', path),
-  upload: <T>(path: string, dados: FormData) => request<T>('POST', path, dados),
+  upload: <T>(path: string, dados: FormData, headers?: Record<string, string>) => request<T>('POST', path, dados, undefined, headers),
 }

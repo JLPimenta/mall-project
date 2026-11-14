@@ -36,7 +36,13 @@ O backend sobe o PostgreSQL do `compose.yaml` automaticamente e aplica as migra�
 docker compose --profile app up --build
 ```
 
-Frontend em http://localhost:5173, API em http://localhost:8080.
+Frontend em http://localhost:5173, API em http://localhost:5173/api. A porta 8080 do backend não é publicada no modo com containers. No modo desenvolvimento acima, a API continua em http://localhost:8080.
+
+O nginx aceita até 21 MB no envio de chamado público (`POST /api/publico/chamado`), mantém 6 MB nas outras APIs e limita os envios por IP na borda. Os limites adicionais do backend podem ser configurados pelas variáveis `CHAMADO_PUBLICO_*` em `.env.example`.
+
+## Registrar chamado pelo QR Code
+
+No navegador da máquina, abra `http://localhost:5173/relatar?local=banheiro-norte`. Para um QR Code lido no celular, use um domínio ou IP acessível ao aparelho, como `http://<IP-da-maquina>:5173/relatar?local=banheiro-norte` no modo com containers; `localhost` no celular aponta para o próprio aparelho. O visitante informa o problema e pode enviar mídia sem login; o local vem preenchido pelo código da URL. A equipe revisa o pré-cadastro em `/chamados` com perfil Supervisor ou Administrador. A seed de desenvolvimento também oferece `praca-alimentacao` e `entrada`.
 
 ## Contas de demonstração
 

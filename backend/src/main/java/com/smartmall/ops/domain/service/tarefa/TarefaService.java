@@ -108,7 +108,7 @@ public class TarefaService implements ITarefaService {
         if (m.getDataHoraPrevista().isBefore(agora)) {
             throw new DomainException("Não é possível restaurar uma tarefa com data passada.");
         }
-        if (!Boolean.TRUE.equals(m.getProgramada().getAtivo())) {
+        if (m.getProgramada() != null && !Boolean.TRUE.equals(m.getProgramada().getAtivo())) {
             throw new DomainException("A manutenção programada desta tarefa está encerrada.");
         }
         m.mudarStatus(StatusTarefa.AGENDADA, AcaoTarefa.RESTAURADA, usuarioRepository.getReferenceById(usuarioId), agora, null);

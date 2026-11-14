@@ -6,7 +6,7 @@ import type { Frequencia, Resumo } from '@/features/manutencao-programada/types'
 export type StatusTarefa = 'AGENDADA' | 'EM_EXECUCAO' | 'EM_ANALISE' | 'CONCLUIDA' | 'CANCELADA'
 export type Situacao = 'AGENDADA' | 'ATRASADA' | 'EM_EXECUCAO' | 'EM_ANALISE' | 'CONCLUIDA' | 'CANCELADA'
 /** De onde a tarefa veio. Chamados (plano de ação) entram depois. */
-export type OrigemTarefa = 'MANUTENCAO_PROGRAMADA'
+export type OrigemTarefa = 'MANUTENCAO_PROGRAMADA' | 'CHAMADO'
 
 export const situacoes: { valor: Situacao; rotulo: string; tom: Tom }[] = [
   { valor: 'AGENDADA', rotulo: 'Agendada', tom: 'info' },
@@ -19,22 +19,24 @@ export const situacoes: { valor: Situacao; rotulo: string; tom: Tom }[] = [
 
 export const origemLabel: Record<OrigemTarefa, string> = {
   MANUTENCAO_PROGRAMADA: 'Manutenção programada',
+  CHAMADO: 'Chamado',
 }
 
 /** Espelha TarefaResponse. */
 export type Tarefa = {
   id: string
   origem: OrigemTarefa
-  manutencaoProgramadaId: string
+  manutencaoProgramadaId: string | null
+  chamadoId: string | null
   dataHoraPrevista: string
   duracaoMinutos: number
   status: StatusTarefa
   atrasada: boolean
-  frequencia: Frequencia
-  equipamento: Resumo
-  piso: string
-  localizacao: string
-  checklist: Resumo
+  frequencia: Frequencia | null
+  equipamento: Resumo | null
+  piso: string | null
+  localizacao: string | null
+  checklist: Resumo | null
   equipe: Resumo
   /** Membro da equipe que assumiu a tarefa. */
   responsavel: Resumo | null
@@ -56,6 +58,21 @@ export type FiltroTarefas = {
 export function situacaoDe(t: Pick<Tarefa, 'status' | 'atrasada'>): Situacao {
   if (t.status === 'AGENDADA' && t.atrasada) return 'ATRASADA'
   return t.status
+}
+
+/** Chamados podem gerar tarefas sem equipamento ou checklist. */
+export function tituloTarefa(t: Pick<Tarefa, 'equipamento' | 'localizacao' | 'origem'>) {
+  if (t.equipamento) return `${t.equipamento.codigo} · ${t.equipamento.nome}`
+  return t.localizacao?.trim() || (t.origem === 'CHAMADO' ? 'Chamado' : 'Tarefa')
+}
+
+export function localTarefa(t: Pick<Tarefa, 'piso' | 'localizacao'>) {
+  return [t.piso, t.localizacao].filter(Boolean).join(' · ') || 'Não informado'
+}
+
+export function rotaOrigemTarefa(t: Pick<Tarefa, 'origem' | 'manutencaoProgramadaId' | 'chamadoId'>) {
+  if (t.origem === 'CHAMADO') return t.chamadoId ? `/chamados/${t.chamadoId}` : null
+  return t.manutencaoProgramadaId ? `/planejamento/manutencoes-programadas/${t.manutencaoProgramadaId}` : null
 }
 
 export const situacaoInfo = Object.fromEntries(situacoes.map((s) => [s.valor, s])) as Record<Situacao, (typeof situacoes)[number]>
