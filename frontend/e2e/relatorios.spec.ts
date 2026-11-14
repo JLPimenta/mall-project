@@ -88,6 +88,8 @@ test.describe('Relatórios (Supervisor)', () => {
     const elevadorE2 = linhaCom(page, 'ELV-E2 · Elevador E2')
     await expect(elevadorE2).toContainText('Atenção')
     await expect(elevadorE2.getByRole('link', { name: 'ELV-E2 · Elevador E2' })).toHaveAttribute('href', '/cadastros/equipamentos/q-1')
+    // As tabelas largas rolam dentro da própria borda; a página não ganha rolagem lateral.
+    await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0)
   })
 
   test('filtra por equipe e valida o período sem consultar o servidor', async ({ page }) => {

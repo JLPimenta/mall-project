@@ -14,7 +14,8 @@ type TabelaContagemProps = {
 /** Contagens por grupo (equipe, equipamento), com a taxa de conclusão em barra. */
 export function TabelaContagem({ coluna, linhas }: TabelaContagemProps) {
   return (
-    <div className="rounded-lg border">
+    // min-w-0: a tabela larga rola dentro da borda, sem alargar a página.
+    <div className="min-w-0 rounded-lg border">
       <Table>
         <TableHeader>
           <TableRow>

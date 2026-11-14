@@ -18,7 +18,7 @@ export function RelatorioTarefas({ filtro, valido }: { filtro: FiltroRelatorio; 
   const origem = useOrigemAtual()
 
   return (
-    <section aria-labelledby="relatorio-tarefas-titulo" className="grid gap-4">
+    <section aria-labelledby="relatorio-tarefas-titulo" className="grid min-w-0 gap-4">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 id="relatorio-tarefas-titulo" className="text-lg font-semibold">
           Tarefas
@@ -38,7 +38,7 @@ export function RelatorioTarefas({ filtro, valido }: { filtro: FiltroRelatorio; 
         <>
           <ResumoTarefas totais={data.totais} />
 
-          <section aria-labelledby="por-equipe-titulo" className="grid gap-2">
+          <section aria-labelledby="por-equipe-titulo" className="grid min-w-0 gap-2">
             <h3 id="por-equipe-titulo" className="font-medium">
               Por equipe
             </h3>
@@ -57,7 +57,7 @@ export function RelatorioTarefas({ filtro, valido }: { filtro: FiltroRelatorio; 
             />
           </section>
 
-          <section aria-labelledby="por-equipamento-titulo" className="grid gap-2">
+          <section aria-labelledby="por-equipamento-titulo" className="grid min-w-0 gap-2">
             <h3 id="por-equipamento-titulo" className="font-medium">
               Por equipamento
             </h3>
