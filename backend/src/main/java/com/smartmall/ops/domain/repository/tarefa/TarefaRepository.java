@@ -46,6 +46,15 @@ public interface TarefaRepository extends BaseRepository<Tarefa> {
 
     long countByStatus(StatusTarefa status);
 
+    /** Tarefas previstas em [de, ate) reprovadas ao menos uma vez na análise. equipeId nulo = todas. */
+    @Query("""
+            select distinct h.tarefa.id from TarefaHistorico h
+            where h.acao = 'REPROVADA'
+              and h.tarefa.dataHoraPrevista >= :de and h.tarefa.dataHoraPrevista < :ate
+              and (:equipeId is null or h.tarefa.programada.equipe.id = :equipeId)
+            """)
+    List<String> idsComReprovacao(LocalDateTime de, LocalDateTime ate, String equipeId);
+
     /** Tarefas assumidas no status informado, da mais antiga para a mais recente. */
     List<Tarefa> findByStatusAndResponsavelIsNotNullOrderByDataHoraPrevistaAsc(StatusTarefa status);
 

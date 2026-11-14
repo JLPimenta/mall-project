@@ -51,6 +51,7 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, LOGIN_URL).permitAll()
                         .requestMatchers("/api/central", "/api/central/**").hasAnyRole(GESTAO)
+                        .requestMatchers("/api/relatorio", "/api/relatorio/**").hasAnyRole(GESTAO)
                         .requestMatchers("/api/disponibilidade", "/api/ausencia", "/api/ausencia/**").hasAnyRole(GESTAO)
                         .requestMatchers("/api/checklist", "/api/checklist/**").hasAnyRole(GESTAO)
                         .requestMatchers("/api/equipamento", "/api/equipamento/**").hasAnyRole(GESTAO)

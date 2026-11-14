@@ -30,7 +30,7 @@ Manutenção programada (recorrência) ────────┘
 | **Chamado** | Registro de um problema (ocorrência), com triagem | — | A implementar |
 | **Plano de ação** | Conjunto de uma ou várias tarefas geradas por um chamado | — | A implementar |
 
-Não usar "plano" sozinho (ambíguo com Plano de ação) nem "agenda" como nome de módulo: a tela é Tarefas, e o calendário é só uma forma de vê-las. Status da tarefa: `AGENDADA → EM_EXECUCAO → EM_ANALISE → CONCLUIDA` (reprovada volta para `EM_EXECUCAO`); `CANCELADA` à parte. Menu: **Operação** (Central de Controle, Tarefas, Em análise), **Planejamento** (Manutenções programadas, Modelos de checklist), **Cadastros**.
+Não usar "plano" sozinho (ambíguo com Plano de ação) nem "agenda" como nome de módulo: a tela é Tarefas, e o calendário é só uma forma de vê-las. Status da tarefa: `AGENDADA → EM_EXECUCAO → EM_ANALISE → CONCLUIDA` (reprovada volta para `EM_EXECUCAO`); `CANCELADA` à parte. Menu: **Operação** (Central de Controle, Tarefas, Em análise), **Planejamento** (Manutenções programadas, Modelos de checklist), **Cadastros**, **Gestão** (Relatórios: `/relatorios`, `GET /api/relatorio/tarefas`, só dados agregados).
 
 ## Decisões de arquitetura
 
@@ -178,6 +178,7 @@ frontend/src
 | `ExcluirDialog`, `ConfirmDialog` | Confirmação de exclusão (mostra o nome) e de ações em geral |
 | `StatusBadge` | Status com tom padronizado (`neutro`, `info`, `sucesso`, `atencao`, `perigo`) |
 | `AlternarVisao` | Botões de visualização da mesma tela (Calendário/Kanban, Equipes/Funcionários), com a visão na URL |
+| `Medidor` | Barra de percentual acessível (`role="meter"`), com o valor em texto |
 | `BotaoNovo` | Ação primária "Novo …" (azul), levando a origem |
 | `LinhaClicavel` | Linha de tabela que abre o registro |
 | `BarraFiltros`, `FiltroTexto`, `FiltroSelect`, `FiltroData` | Filtros de listagem (estado na URL com `useFiltrosUrl`) |

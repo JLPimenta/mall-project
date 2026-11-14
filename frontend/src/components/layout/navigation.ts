@@ -1,4 +1,4 @@
-import { ClipboardCheckIcon, ClipboardListIcon, ListChecksIcon, MapIcon, RepeatIcon, UsersIcon, WrenchIcon, type LucideIcon } from 'lucide-react'
+import { ChartColumnIcon, ClipboardCheckIcon, ClipboardListIcon, ListChecksIcon, MapIcon, RepeatIcon, UsersIcon, WrenchIcon, type LucideIcon } from 'lucide-react'
 import { temPerfil } from '@/features/auth/permissoes'
 import type { Perfil } from '@/features/auth/types'
 
@@ -43,6 +43,10 @@ export const navGrupos: readonly NavGrupo[] = [
       { title: 'Equipamentos', to: '/cadastros/equipamentos', icon: WrenchIcon, perfis: GESTAO },
       { title: 'Equipes', to: '/cadastros/equipes', icon: UsersIcon, perfis: GESTAO },
     ],
+  },
+  {
+    titulo: 'Gestão',
+    itens: [{ title: 'Relatórios', to: '/relatorios', icon: ChartColumnIcon, perfis: GESTAO }],
   },
 ]
 
