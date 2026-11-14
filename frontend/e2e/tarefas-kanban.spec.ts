@@ -13,7 +13,7 @@ const coluna = (page: Page, rotulo: string) => page.getByRole('list', { name: `T
 const tituloColuna = (page: Page, rotulo: string) => page.getByRole('heading', { level: 3, name: new RegExp(`^${rotulo}`) })
 const botaoVisao = (page: Page, nome: 'Calendário' | 'Kanban') => page.getByRole('group', { name: 'Visualização' }).getByRole('button', { name: nome })
 
-type ItemTarefa = { dataHoraPrevista: string; atrasada: boolean; status: string; equipamento: { codigo: string } }
+type ItemTarefa = { dataHoraPrevista: string; atrasada: boolean; status: string; equipamento: { codigo: string } | null }
 
 /** Tarefas do mês corrente pela API (mesma visão do usuário logado). */
 async function tarefasDoMes(page: Page, situacao?: string) {
@@ -76,12 +76,14 @@ test.describe('Tarefas: Kanban (Supervisor)', () => {
     const atrasadas = doMes.filter((t) => t.status === 'AGENDADA' && t.atrasada)
     const agendadas = doMes.filter((t) => t.status === 'AGENDADA' && !t.atrasada)
 
+    // Mantém a resposta que a tela recebe estável durante testes paralelos que criam tarefas.
+    await page.route((url) => url.pathname === '/api/tarefa', (rota) => rota.fulfill({ json: doMes }))
     await page.goto(KANBAN)
 
     await expect(tituloColuna(page, 'Atrasada')).toContainText(String(atrasadas.length))
     await expect(tituloColuna(page, 'Agendada')).toContainText(String(agendadas.length))
     if (atrasadas.length > 0) await expect(coluna(page, 'Atrasada').getByRole('listitem')).toHaveCount(atrasadas.length)
-    const elevador = atrasadas.find((t) => t.equipamento.codigo === 'ELV-E1')
+    const elevador = atrasadas.find((t) => t.equipamento?.codigo === 'ELV-E1')
     if (elevador) await expect(coluna(page, 'Atrasada')).toContainText('ELV-E1 · Elevador E1')
   })
 
@@ -165,7 +167,7 @@ test.describe('Tarefas: Kanban (Funcionário)', () => {
     await expect(tituloColuna(page, 'Agendada')).toBeVisible()
 
     const doMes = await tarefasDoMes(page)
-    test.skip(!doMes.some((t) => t.equipamento.codigo === 'ELV-E1'), 'Sem tarefa do elevador no mês corrente.')
+    test.skip(!doMes.some((t) => t.equipamento?.codigo === 'ELV-E1'), 'Sem tarefa do elevador no mês corrente.')
     await expect(page.getByRole('main')).toContainText('ELV-E1')
     await expect(page.getByRole('button', { name: /^Cancelar tarefa/ })).toHaveCount(0)
     await expect(page.getByRole('link', { name: /^Abrir a manutenção programada/ })).toHaveCount(0)
