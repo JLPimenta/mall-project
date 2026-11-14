@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
-import { contas, entrar, menuDoUsuario, preencherLogin, sair, SENHA_DEMO } from './support/auth'
+import { contas, entrar, menuDoUsuario, pedirSaida, preencherLogin, sair, SENHA_DEMO } from './support/auth'
 
 /** Itens do menu lateral. No celular o menu fica numa gaveta aberta pelo botão "Alternar menu". */
 async function navegacao(page: Page, isMobile: boolean) {
@@ -161,6 +161,39 @@ test.describe('Sessão', () => {
 
     await expect(page).toHaveURL(/\/login$/)
     expect((await page.request.get('/api/auth/sessao')).status()).toBe(401)
+  })
+
+  test('sair pede confirmação e cancelar mantém a sessão', async ({ page }) => {
+    await entrar(page, contas.supervisor)
+    const url = page.url()
+
+    const dialogo = await pedirSaida(page, contas.supervisor)
+    await expect(dialogo.getByRole('button', { name: 'Cancelar' })).toBeFocused()
+    await dialogo.getByRole('button', { name: 'Cancelar' }).click()
+
+    await expect(dialogo).toBeHidden()
+    await expect(page).toHaveURL(url)
+    expect((await page.request.get('/api/auth/sessao')).status()).toBe(200)
+  })
+
+  test('Esc fecha a confirmação sem sair', async ({ page }) => {
+    await entrar(page, contas.administrador)
+
+    const dialogo = await pedirSaida(page, contas.administrador)
+    await page.keyboard.press('Escape')
+
+    await expect(dialogo).toBeHidden()
+    await expect(menuDoUsuario(page, contas.administrador)).toBeVisible()
+    expect((await page.request.get('/api/auth/sessao')).status()).toBe(200)
+  })
+
+  test('menu continua utilizável depois de cancelar a saída', async ({ page }) => {
+    await entrar(page, contas.supervisor)
+
+    const dialogo = await pedirSaida(page, contas.supervisor)
+    await dialogo.getByRole('button', { name: 'Cancelar' }).click()
+
+    await sair(page, contas.supervisor)
   })
 
   test('sessão expirada no servidor leva ao login', async ({ page, context }) => {

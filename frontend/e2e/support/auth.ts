@@ -28,9 +28,18 @@ export function menuDoUsuario(page: Page, conta: Conta) {
   return page.getByRole('banner').getByRole('button', { name: new RegExp(iniciais(conta.nome)) })
 }
 
-export async function sair(page: Page, conta: Conta) {
+/** Abre o menu do usuário e clica em "Sair"; retorna o diálogo de confirmação. */
+export async function pedirSaida(page: Page, conta: Conta) {
   await menuDoUsuario(page, conta).click()
   await page.getByRole('menuitem', { name: 'Sair' }).click()
+  const dialogo = page.getByRole('alertdialog', { name: 'Sair do sistema?' })
+  await expect(dialogo).toBeVisible()
+  return dialogo
+}
+
+export async function sair(page: Page, conta: Conta) {
+  const dialogo = await pedirSaida(page, conta)
+  await dialogo.getByRole('button', { name: 'Sair' }).click()
   await expect(page).toHaveURL(/\/login$/)
 }
 
