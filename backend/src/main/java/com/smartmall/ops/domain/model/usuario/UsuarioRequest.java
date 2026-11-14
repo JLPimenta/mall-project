@@ -27,8 +27,8 @@ public class UsuarioRequest {
     @Size(max = 150, message = "O e-mail deve ter até 150 caracteres.")
     private String email;
 
-    @NotBlank(message = "Informe a senha.")
-    @Size(min = 6, max = 72, message = "A senha deve ter entre 6 e 72 caracteres.")
+    /** Obrigatória no cadastro; na edição, vazia ou ausente mantém a senha atual. */
+    @Size(max = 72, message = "A senha deve ter até 72 caracteres.")
     private String senha;
 
     @NotNull(message = "Informe o perfil.")

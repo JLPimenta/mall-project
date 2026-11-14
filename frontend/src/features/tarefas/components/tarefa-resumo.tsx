@@ -4,28 +4,29 @@ import { StatusBadge } from '@/components/shared/status-badge'
 import { formatar } from '@/lib/datas'
 import { useOrigemAtual } from '@/lib/navegacao'
 import { faixaHorario } from '../formatos'
-import { origemLabel, situacaoDe, situacaoInfo, type Tarefa } from '../types'
+import { localTarefa, origemLabel, rotaOrigemTarefa, situacaoDe, situacaoInfo, type Tarefa } from '../types'
 
 type TarefaResumoProps = {
   tarefa: Tarefa
-  /** Administrador e Supervisor abrem a manutenção programada de origem. */
+  /** Administrador e Supervisor abrem o registro de origem. */
   podeGerenciar: boolean
 }
 
 export function TarefaResumo({ tarefa: t, podeGerenciar }: TarefaResumoProps) {
   const origem = useOrigemAtual()
   const situacao = situacaoInfo[situacaoDe(t)]
+  const rotaOrigem = rotaOrigemTarefa(t)
   const campos: [string, ReactNode][] = [
     ['Situação', <StatusBadge key="situacao" tom={situacao.tom}>{situacao.rotulo}</StatusBadge>],
     ['Data', `${formatar.data(t.dataHoraPrevista)}, ${faixaHorario(t.dataHoraPrevista, t.duracaoMinutos)}`],
-    ['Local', `${t.piso} · ${t.localizacao}`],
+    ['Local', localTarefa(t)],
     ['Equipe', t.equipe.nome],
     ['Responsável', t.responsavel?.nome ?? '—'],
-    ['Modelo de checklist', t.checklist.nome],
+    ['Modelo de checklist', t.checklist?.nome ?? 'Sem checklist'],
     [
       'Origem',
-      podeGerenciar ? (
-        <Link key="origem" to={`/planejamento/manutencoes-programadas/${t.manutencaoProgramadaId}`} state={origem} className="underline-offset-4 hover:underline">
+      podeGerenciar && rotaOrigem ? (
+        <Link key="origem" to={rotaOrigem} state={origem} className="underline-offset-4 hover:underline">
           {origemLabel[t.origem]}
         </Link>
       ) : (

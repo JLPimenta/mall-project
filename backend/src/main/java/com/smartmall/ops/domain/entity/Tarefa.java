@@ -31,9 +31,35 @@ import java.util.List;
 @Table(name = "TAREFA")
 public class Tarefa extends BaseEntity {
 
-    @ManyToOne(fetch = FetchType.EAGER, optional = false)
-    @JoinColumn(name = "MANUTENCAO_PROGRAMADA_ID", nullable = false)
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "MANUTENCAO_PROGRAMADA_ID")
     private ManutencaoProgramada programada;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "PLANO_ACAO_ID")
+    private PlanoAcao planoAcao;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "EQUIPE_ID")
+    private Equipe equipe;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "EQUIPAMENTO_ID")
+    private Equipamento equipamento;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "CHECKLIST_ID")
+    private Checklist checklist;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "PISO_ID")
+    private Piso piso;
+
+    @Column(name = "LOCALIZACAO", length = 150)
+    private String localizacao;
+
+    @Column(name = "DURACAO_MINUTOS")
+    private Integer duracaoMinutos;
 
     @Column(name = "DATA_HORA_PREVISTA", nullable = false)
     private LocalDateTime dataHoraPrevista;
@@ -76,6 +102,25 @@ public class Tarefa extends BaseEntity {
         this.status = StatusTarefa.AGENDADA;
         this.origem = OrigemTarefa.MANUTENCAO_PROGRAMADA;
     }
+
+    public Tarefa(PlanoAcao planoAcao, Equipe equipe, Equipamento equipamento, Checklist checklist,
+                  Piso piso, String localizacao, LocalDateTime dataHoraPrevista, int duracaoMinutos) {
+        this.planoAcao = planoAcao;
+        this.equipe = equipe;
+        this.equipamento = equipamento;
+        this.checklist = checklist;
+        this.piso = piso;
+        this.localizacao = localizacao;
+        this.dataHoraPrevista = dataHoraPrevista;
+        this.duracaoMinutos = duracaoMinutos;
+        this.status = StatusTarefa.AGENDADA;
+        this.origem = OrigemTarefa.CHAMADO;
+    }
+
+    public Equipe equipeEfetiva() { return programada == null ? equipe : programada.getEquipe(); }
+    public Equipamento equipamentoEfetivo() { return programada == null ? equipamento : programada.getEquipamento(); }
+    public Checklist checklistEfetivo() { return programada == null ? checklist : programada.getChecklist(); }
+    public Integer duracaoEfetiva() { return programada == null ? duracaoMinutos : programada.getDuracaoMinutos(); }
 
     /** Agendada com data e hora já passadas. */
     public boolean isAtrasada(LocalDateTime agora) {

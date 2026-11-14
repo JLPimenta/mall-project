@@ -23,11 +23,15 @@ public interface TarefaRepository extends BaseRepository<Tarefa> {
      */
     @Query("""
             select m from Tarefa m
+            left join m.programada p
+            left join p.equipe pe
+            left join m.equipe te
             where m.dataHoraPrevista >= :de and m.dataHoraPrevista < :ate
-              and (:programadaId is null or m.programada.id = :programadaId)
-              and (:equipeId is null or m.programada.equipe.id = :equipeId)
+              and (:programadaId is null or p.id = :programadaId)
+              and (:equipeId is null or coalesce(te.id, pe.id) = :equipeId)
               and (:membroId is null or exists (
-                    select 1 from Equipe e join e.membros u where e = m.programada.equipe and u.id = :membroId))
+                    select 1 from Equipe membroEquipe join membroEquipe.membros u
+                    where membroEquipe.id = coalesce(te.id, pe.id) and u.id = :membroId))
             order by m.dataHoraPrevista
             """)
     List<Tarefa> buscar(LocalDateTime de, LocalDateTime ate, String programadaId, String equipeId, String membroId);
@@ -36,6 +40,8 @@ public interface TarefaRepository extends BaseRepository<Tarefa> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select t from Tarefa t where t.id = :id")
     Optional<Tarefa> buscarParaAlterar(String id);
+
+    Optional<Tarefa> findFirstByPlanoAcaoId(String planoAcaoId);
 
     /** Fila de análise: o envio mais antigo primeiro. */
     List<Tarefa> findByStatusOrderByUltimoEnvioAsc(StatusTarefa status);

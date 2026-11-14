@@ -1,4 +1,4 @@
-import { ChartColumnIcon, ClipboardCheckIcon, ClipboardListIcon, ListChecksIcon, MapIcon, PackageIcon, RepeatIcon, UsersIcon, WrenchIcon, type LucideIcon } from 'lucide-react'
+import { ChartColumnIcon, ClipboardCheckIcon, ClipboardListIcon, ListChecksIcon, MapIcon, MessageSquareWarningIcon, PackageIcon, RepeatIcon, UsersIcon, UsersRoundIcon, WrenchIcon, type LucideIcon } from 'lucide-react'
 import { temPerfil } from '@/features/auth/permissoes'
 import type { Perfil } from '@/features/auth/types'
 
@@ -18,14 +18,15 @@ const GESTAO = ['ADMINISTRADOR', 'SUPERVISOR'] as const satisfies readonly Perfi
  * Só entram aqui módulos já implementados. Perfis iguais aos do backend (SecurityConfiguration).
  * A ordem define o destino inicial: cada perfil cai no primeiro item permitido.
  *
- * Fluxo (docs/modulo-manutencao.md, Glossário): Operação é o dia a dia (Tarefas é onde chegam os dois
- * fluxos: manutenção programada e, no futuro, chamado). Planejamento define o que vira tarefa.
+ * Fluxo (docs/modulo-manutencao.md, Glossário): Operação recebe Chamados e acompanha Tarefas.
+ * Planejamento define a manutenção programada que também gera tarefas.
  */
 export const navGrupos: readonly NavGrupo[] = [
   {
     titulo: 'Operação',
     itens: [
       { title: 'Central de Controle', to: '/central', icon: MapIcon, perfis: GESTAO },
+      { title: 'Chamados', to: '/chamados', icon: MessageSquareWarningIcon, perfis: GESTAO },
       { title: 'Tarefas', to: '/tarefas', icon: ListChecksIcon },
       { title: 'Análise de Tarefas', to: '/analise', icon: ClipboardCheckIcon, perfis: GESTAO },
       // Todos os perfis: o Funcionário consulta o saldo e registra retiradas; cadastro e entrada só a gestão.
@@ -44,6 +45,7 @@ export const navGrupos: readonly NavGrupo[] = [
     itens: [
       { title: 'Equipamentos', to: '/cadastros/equipamentos', icon: WrenchIcon, perfis: GESTAO },
       { title: 'Equipes', to: '/cadastros/equipes', icon: UsersIcon, perfis: GESTAO },
+      { title: 'Membros e permissões', to: '/cadastros/usuarios', icon: UsersRoundIcon, perfis: ['ADMINISTRADOR'] },
     ],
   },
   {

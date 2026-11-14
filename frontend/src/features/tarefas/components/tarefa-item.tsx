@@ -2,7 +2,7 @@ import { StatusBadge } from '@/components/shared/status-badge'
 import { formatar } from '@/lib/datas'
 import { cn } from '@/lib/utils'
 import { faixaHorario } from '../formatos'
-import { situacaoDe, situacaoInfo, type Tarefa } from '../types'
+import { localTarefa, situacaoDe, situacaoInfo, type Tarefa } from '../types'
 import { itemAbrivel, TarefaAbrir } from './tarefa-abrir'
 import { TarefaAcoes } from './tarefa-acoes'
 import { TarefaOrigem } from './tarefa-origem'
@@ -31,7 +31,7 @@ export function TarefaItem({ tarefa: t, podeGerenciar, mostrarData, compacto }: 
         <TarefaAbrir tarefa={t} oculto={compacto} className="truncate" />
         {!compacto && (
           <span className="truncate text-xs text-muted-foreground">
-            {t.piso} · {t.localizacao} · {t.equipe.nome}
+            {localTarefa(t)} · {t.equipe.nome}
             {t.responsavel && ` · ${t.responsavel.nome}`}
           </span>
         )}

@@ -3,8 +3,9 @@ import { useSearchParams } from 'react-router'
 /**
  * Filtros de listagem guardados na URL (?nome=…&categoria=…):
  * sobrevivem ao recarregar e ao voltar de um cadastro (a origem inclui a query string).
+ * `limparAoAlterar` remove parâmetros dependentes, como a página atual de uma lista paginada.
  */
-export function useFiltrosUrl<K extends string>(chaves: readonly K[]) {
+export function useFiltrosUrl<K extends string>(chaves: readonly K[], limparAoAlterar: readonly string[] = []) {
   const [params, setParams] = useSearchParams()
   const valores = Object.fromEntries(chaves.map((k) => [k, params.get(k) ?? ''])) as Record<K, string>
 
@@ -19,6 +20,7 @@ export function useFiltrosUrl<K extends string>(chaves: readonly K[]) {
       if (valor) proximo.set(chave, valor)
       else proximo.delete(chave)
     }
+    for (const chave of limparAoAlterar) proximo.delete(chave)
     setParams(proximo, { replace: true })
   }
 

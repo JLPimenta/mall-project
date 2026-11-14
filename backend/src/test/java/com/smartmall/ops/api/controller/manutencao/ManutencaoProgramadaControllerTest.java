@@ -139,8 +139,10 @@ class ManutencaoProgramadaControllerTest {
         when(service.encerrar("programada-1", "u-admin")).thenReturn(encerrado);
         var admin = new Usuario("Admin", "a@smartmall.local", "h", Perfil.ADMINISTRADOR, true);
         admin.setId("u-admin");
+        var autenticado = new UsuarioAutenticado(admin);
+        when(userDetailsService.loadUserByUsername(admin.getEmail())).thenReturn(autenticado);
 
-        mvc.perform(post("/api/manutencao-programada/programada-1/encerrar").with(user(new UsuarioAutenticado(admin))))
+        mvc.perform(post("/api/manutencao-programada/programada-1/encerrar").with(user(autenticado)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.ativo").value(false));
     }

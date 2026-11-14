@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { formatar } from '@/lib/datas'
 import { useOrigemAtual } from '@/lib/navegacao'
-import type { Tarefa } from '../types'
+import { localTarefa, tituloTarefa, type Tarefa } from '../types'
 
 /** Tarefas enviadas para análise, o envio mais antigo primeiro. */
 export function FilaAnaliseTable({ tarefas }: { tarefas: Tarefa[] }) {
@@ -15,7 +15,7 @@ export function FilaAnaliseTable({ tarefas }: { tarefas: Tarefa[] }) {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Equipamento</TableHead>
+            <TableHead>Tarefa</TableHead>
             <TableHead className="hidden md:table-cell">Equipe</TableHead>
             <TableHead>Responsável</TableHead>
             <TableHead className="hidden w-36 sm:table-cell">Prevista</TableHead>
@@ -27,13 +27,13 @@ export function FilaAnaliseTable({ tarefas }: { tarefas: Tarefa[] }) {
         </TableHeader>
         <TableBody>
           {tarefas.map((t) => {
-            const nome = `${t.equipamento.codigo} · ${t.equipamento.nome}`
+            const nome = tituloTarefa(t)
             return (
               <LinhaClicavel key={t.id} para={`/tarefas/${t.id}`}>
                 <TableCell className="whitespace-normal">
                   <div className="font-medium">{nome}</div>
                   <div className="text-xs text-muted-foreground">
-                    {t.piso} · {t.localizacao}
+                    {localTarefa(t)}
                   </div>
                 </TableCell>
                 <TableCell className="hidden md:table-cell">{t.equipe.nome}</TableCell>

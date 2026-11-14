@@ -8,7 +8,7 @@ import { formatar } from '@/lib/datas'
 import { useAgora } from '@/lib/use-agora'
 import { faixaHorario } from '../formatos'
 import { useCancelarTarefa, useRestaurarTarefa } from '../hooks'
-import type { Tarefa } from '../types'
+import { tituloTarefa, type Tarefa } from '../types'
 
 /** Cancelar (agendada) e restaurar (cancelada e futura). Só para quem pode gerenciar tarefas. */
 export function TarefaAcoes({ tarefa: t }: { tarefa: Tarefa }) {
@@ -17,7 +17,7 @@ export function TarefaAcoes({ tarefa: t }: { tarefa: Tarefa }) {
   const restaurar = useRestaurarTarefa()
   const agora = useAgora()
   const futura = new Date(t.dataHoraPrevista) > agora
-  const titulo = `${t.equipamento.codigo} · ${t.equipamento.nome}`
+  const titulo = tituloTarefa(t)
   const quando = `${formatar.data(t.dataHoraPrevista)}, ${faixaHorario(t.dataHoraPrevista, t.duracaoMinutos)}`
 
   const executar = (acao: typeof cancelar, sucesso: string) =>
@@ -49,7 +49,7 @@ export function TarefaAcoes({ tarefa: t }: { tarefa: Tarefa }) {
         open={confirmando}
         onOpenChange={setConfirmando}
         title="Cancelar esta tarefa?"
-        description={`${titulo} — ${quando}. As demais tarefas da manutenção programada não mudam.`}
+        description={`${titulo} — ${quando}. O cancelamento afeta apenas esta tarefa.`}
         confirmLabel="Cancelar tarefa"
         destructive
         onConfirm={() => executar(cancelar, 'Tarefa cancelada.')}

@@ -1,4 +1,5 @@
-import { Navigate, useLocation, useNavigate } from 'react-router'
+import { ArrowRightIcon } from 'lucide-react'
+import { Link, Navigate, useLocation, useNavigate } from 'react-router'
 import { Logo } from '@/components/layout/logo'
 import { podeAcessar } from '@/components/layout/navigation'
 import { ApresentacaoLogin } from '@/features/auth/components/apresentacao-login'
@@ -32,6 +33,13 @@ export function LoginPage() {
             <p className="text-sm text-muted-foreground">Use um perfil de demonstração para visualizar as permissões de cada papel.</p>
           </div>
           <LoginForm onSuccess={(logado) => navigate(destinoPara(logado.perfil), { replace: true })} />
+          <Link
+            to="/relatar"
+            className="flex items-center justify-center gap-1.5 rounded-lg border border-primary/20 bg-accent px-4 py-2.5 text-sm font-semibold text-primary transition-colors hover:bg-primary/10 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+          >
+            Relatar ocorrência sem login
+            <ArrowRightIcon className="size-4" aria-hidden />
+          </Link>
         </div>
       </main>
     </div>

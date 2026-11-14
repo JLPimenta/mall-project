@@ -41,6 +41,12 @@ export function ExecucaoForm({ detalhe, onCancel }: ExecucaoFormProps) {
     acao.current = 'salvar'
     setErro(undefined)
     if (enviando) {
+      if (detalhe.tarefa.origem === 'CHAMADO' && !dados.observacao.trim()) {
+        setErro('Registre a resolução do chamado.')
+        form.setError('observacao', { message: 'Registre a resolução do chamado.' })
+        form.setFocus('observacao')
+        return undefined
+      }
       const faltando = faltandoParaEnviar(detalhe.itens, dados)
       faltando.forEach((i) => form.setError(`respostas.${i}.resposta`, { message: 'Responda este item.' }))
       if (faltando.length) {
@@ -48,7 +54,7 @@ export function ExecucaoForm({ detalhe, onCancel }: ExecucaoFormProps) {
         form.setFocus(`respostas.${faltando[0]}.resposta`)
         return undefined
       }
-      if (!pendentes) {
+      if (!pendentes && detalhe.tarefa.origem === 'MANUTENCAO_PROGRAMADA') {
         setErro(detalhe.tarefa.envios > 0 ? 'Anexe ao menos uma imagem nova para reenviar.' : 'Anexe ao menos uma imagem como evidência.')
         return undefined
       }
@@ -82,9 +88,9 @@ export function ExecucaoForm({ detalhe, onCancel }: ExecucaoFormProps) {
         </Button>
       }
     >
-      <ChecklistExecucao itens={detalhe.itens} />
+      {detalhe.itens.length > 0 && <ChecklistExecucao itens={detalhe.itens} />}
       <Field data-invalid={!!form.formState.errors.observacao} className="gap-1.5">
-        <FieldLabel htmlFor="execucao-observacao">Observação</FieldLabel>
+        <FieldLabel htmlFor="execucao-observacao">{detalhe.tarefa.origem === 'CHAMADO' ? 'Resolução' : 'Observação'}</FieldLabel>
         <LimitedTextarea
           id="execucao-observacao"
           rows={3}
