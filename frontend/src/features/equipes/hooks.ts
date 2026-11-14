@@ -1,11 +1,34 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { equipesApi } from './api'
+import type { AusenciaRequest } from './disponibilidade'
 import type { EquipeRequest } from './types'
 
 export const equipeKeys = {
   all: ['equipes'] as const,
   detalhe: (id: string) => ['equipes', id] as const,
   funcionarios: ['funcionarios'] as const,
+  disponibilidade: ['disponibilidade'] as const,
+}
+
+/** Situação de hoje dos funcionários. Atualiza a cada minuto (tarefas assumidas por outros). */
+export function useDisponibilidade(habilitado = true) {
+  return useQuery({ queryKey: equipeKeys.disponibilidade, queryFn: equipesApi.disponibilidade, enabled: habilitado, refetchInterval: 60_000 })
+}
+
+export function useRegistrarAusencia() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (dados: AusenciaRequest) => equipesApi.registrarAusencia(dados),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: equipeKeys.disponibilidade }),
+  })
+}
+
+export function useEncerrarAusencia() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => equipesApi.encerrarAusencia(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: equipeKeys.disponibilidade }),
+  })
 }
 
 export function useEquipes(habilitado = true) {

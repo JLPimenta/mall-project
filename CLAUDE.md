@@ -25,6 +25,8 @@ Manutenção programada (recorrência) ────────┘
 | **Origem da tarefa** | De onde a tarefa veio | `OrigemTarefa`: `MANUTENCAO_PROGRAMADA`; `CHAMADO` entra com os chamados | Implementado |
 | **Manutenção programada** | Agendamento recorrente (ou único) que gera tarefas numa frequência | `ManutencaoProgramada`, `/api/manutencao-programada`, `/planejamento/manutencoes-programadas` | Implementado |
 | **Modelo de checklist** | Molde de verificação usado pelas tarefas; o checklist preenchido fica na tarefa | `Checklist` (nome técnico mantido), `/api/checklist`, `/planejamento/modelos-checklist` | Implementado |
+| **Disponibilidade** | Situação de hoje do funcionário, calculada: Indisponível (ausência vigente) > Ocupado (responsável por tarefa em execução) > Disponível. Presentes = disponíveis + ocupados | `/api/disponibilidade`, tela `/cadastros/equipes?visao=funcionarios` | Implementado |
+| **Ausência** | Período (dias inteiros) em que o funcionário não está disponível. Motivo genérico, sem texto livre (LGPD: nada de dado de saúde) | `Ausencia`, `/api/ausencia` | Implementado |
 | **Chamado** | Registro de um problema (ocorrência), com triagem | — | A implementar |
 | **Plano de ação** | Conjunto de uma ou várias tarefas geradas por um chamado | — | A implementar |
 
@@ -175,6 +177,7 @@ frontend/src
 | `LimitedInput`, `LimitedTextarea` | Texto com limite obrigatório e contador |
 | `ExcluirDialog`, `ConfirmDialog` | Confirmação de exclusão (mostra o nome) e de ações em geral |
 | `StatusBadge` | Status com tom padronizado (`neutro`, `info`, `sucesso`, `atencao`, `perigo`) |
+| `AlternarVisao` | Botões de visualização da mesma tela (Calendário/Kanban, Equipes/Funcionários), com a visão na URL |
 | `BotaoNovo` | Ação primária "Novo …" (azul), levando a origem |
 | `LinhaClicavel` | Linha de tabela que abre o registro |
 | `BarraFiltros`, `FiltroTexto`, `FiltroSelect`, `FiltroData` | Filtros de listagem (estado na URL com `useFiltrosUrl`) |
