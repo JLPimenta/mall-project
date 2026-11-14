@@ -1,5 +1,6 @@
 import { Navigate, useLocation, useNavigate } from 'react-router'
 import { Logo } from '@/components/layout/logo'
+import { ApresentacaoLogin } from '@/features/auth/components/apresentacao-login'
 import { LoginForm } from '@/features/auth/components/login-form'
 import { podeAcessar } from '@/components/layout/navigation'
 import { useSessao } from '@/features/auth/hooks'
@@ -23,7 +24,8 @@ export function LoginPage() {
         <div className="w-fit rounded-xl bg-white px-5 py-4">
           <Logo className="max-w-72" />
         </div>
-        <p className="text-sm text-sidebar-foreground/70">Capim Dourado Shopping</p>
+        <ApresentacaoLogin />
+        <p className="text-sm text-sidebar-foreground/70">Acesso restrito à equipe do shopping.</p>
       </aside>
       <main className="flex items-center justify-center p-6">
         <div className="grid w-full max-w-sm gap-6">

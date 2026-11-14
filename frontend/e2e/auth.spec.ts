@@ -8,6 +8,18 @@ async function navegacao(page: Page, isMobile: boolean) {
 }
 
 test.describe('Tela de login', () => {
+  test('apresenta os módulos e marca as análises com IA como em desenvolvimento', async ({ page, isMobile }) => {
+    await page.goto('/login')
+    await expect(page.getByRole('img', { name: 'SmartMall Ops IA' })).toBeVisible()
+    test.skip(isMobile, 'O painel de apresentação só aparece em telas largas.')
+
+    await expect(page.getByRole('list', { name: 'Módulos do sistema' }).getByRole('listitem')).toHaveCount(5)
+    const ia = page.getByRole('list', { name: 'Análises com IA em desenvolvimento' })
+    await expect(ia.getByRole('listitem')).toHaveCount(3)
+    await expect(page.getByText('Em desenvolvimento', { exact: true })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1)
+  })
+
   test('rota interna sem sessão leva ao login', async ({ page }) => {
     await page.goto('/central')
 
