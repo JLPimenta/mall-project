@@ -6,6 +6,7 @@ import com.smartmall.ops.domain.entity.Piso;
 import com.smartmall.ops.domain.entity.enums.CategoriaEquipamento;
 import com.smartmall.ops.domain.entity.enums.CondicaoEquipamento;
 import com.smartmall.ops.domain.repository.equipamento.EquipamentoRepository;
+import com.smartmall.ops.domain.repository.estoque.MovimentacaoEstoqueRepository;
 import com.smartmall.ops.domain.repository.manutencao.ManutencaoProgramadaRepository;
 import com.smartmall.ops.domain.repository.piso.PisoRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,13 +31,14 @@ class EquipamentoServiceTest {
     @Mock private EquipamentoRepository repository;
     @Mock private PisoRepository pisoRepository;
     @Mock private ManutencaoProgramadaRepository programadaRepository;
+    @Mock private MovimentacaoEstoqueRepository movimentacaoRepository;
 
     private EquipamentoService service;
     private final Piso l1 = new Piso("L1", "Piso L1", 1);
 
     @BeforeEach
     void setUp() {
-        service = new EquipamentoService(repository, pisoRepository, programadaRepository);
+        service = new EquipamentoService(repository, pisoRepository, programadaRepository, movimentacaoRepository);
         l1.setId("p1");
         lenient().when(pisoRepository.findById("p1")).thenReturn(Optional.of(l1));
         lenient().when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
@@ -116,5 +118,16 @@ class EquipamentoServiceTest {
         service.delete("e1");
 
         verify(repository).deleteById("e1");
+    }
+
+    @Test
+    void equipamentoComMovimentacaoDeEstoqueNaoPodeSerExcluido() {
+        when(programadaRepository.existsByEquipamentoId("e1")).thenReturn(false);
+        when(movimentacaoRepository.existsByEquipamentoId("e1")).thenReturn(true);
+
+        assertThatThrownBy(() -> service.delete("e1"))
+                .isInstanceOf(DomainException.class)
+                .hasMessage("Equipamento com movimentações de estoque não pode ser excluído.");
+        verify(repository, never()).deleteById(any());
     }
 }

@@ -1,6 +1,7 @@
 import { BellRingIcon, ListChecksIcon, UsersIcon, WrenchIcon } from 'lucide-react'
 import { Link } from 'react-router'
 import { ErrorState } from '@/components/shared/error-state'
+import { Medidor } from '@/components/shared/medidor'
 import { StatusBadge } from '@/components/shared/status-badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useOrigemAtual } from '@/lib/navegacao'
@@ -47,20 +48,7 @@ export function IndicadoresCentral() {
 
           <CartaoIndicador id="equipamentos" titulo="Equipamentos monitorados" valor={data.equipamentos.total} icone={WrenchIcon} link={{ to: '/cadastros/equipamentos', rotulo: 'Ver equipamentos' }}>
             <p className="text-muted-foreground">{data.equipamentos.operando} operando normalmente</p>
-            <div className="flex items-center gap-2">
-              <div
-                role="meter"
-                aria-label="Equipamentos ativos"
-                aria-valuemin={0}
-                aria-valuemax={100}
-                aria-valuenow={data.equipamentos.percentualOperando}
-                aria-valuetext={`${data.equipamentos.percentualOperando}%`}
-                className="h-2 flex-1 overflow-hidden rounded-full bg-muted"
-              >
-                <div className="h-full rounded-full bg-success" style={{ width: `${data.equipamentos.percentualOperando}%` }} />
-              </div>
-              <span className="text-xs font-medium tabular-nums">{data.equipamentos.percentualOperando}% ativos</span>
-            </div>
+            <Medidor rotulo="Equipamentos ativos" percentual={data.equipamentos.percentualOperando} legenda={`${data.equipamentos.percentualOperando}% ativos`} />
           </CartaoIndicador>
 
           <CartaoIndicador

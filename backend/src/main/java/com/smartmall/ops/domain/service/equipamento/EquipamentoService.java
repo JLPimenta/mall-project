@@ -4,6 +4,7 @@ import com.smartmall.ops.domain.core.exception.DomainException;
 import com.smartmall.ops.domain.core.service.BaseService;
 import com.smartmall.ops.domain.entity.Equipamento;
 import com.smartmall.ops.domain.repository.equipamento.EquipamentoRepository;
+import com.smartmall.ops.domain.repository.estoque.MovimentacaoEstoqueRepository;
 import com.smartmall.ops.domain.repository.manutencao.ManutencaoProgramadaRepository;
 import com.smartmall.ops.domain.repository.piso.PisoRepository;
 import org.springframework.stereotype.Service;
@@ -14,12 +15,15 @@ public class EquipamentoService extends BaseService<Equipamento> implements IEqu
 
     private final PisoRepository pisoRepository;
     private final ManutencaoProgramadaRepository programadaRepository;
+    private final MovimentacaoEstoqueRepository movimentacaoRepository;
 
     protected EquipamentoService(final EquipamentoRepository repository, final PisoRepository pisoRepository,
-                                 final ManutencaoProgramadaRepository programadaRepository) {
+                                 final ManutencaoProgramadaRepository programadaRepository,
+                                 final MovimentacaoEstoqueRepository movimentacaoRepository) {
         super(repository);
         this.pisoRepository = pisoRepository;
         this.programadaRepository = programadaRepository;
+        this.movimentacaoRepository = movimentacaoRepository;
     }
 
     @Override
@@ -48,6 +52,9 @@ public class EquipamentoService extends BaseService<Equipamento> implements IEqu
     public void delete(String id) {
         if (programadaRepository.existsByEquipamentoId(id)) {
             throw new DomainException("Equipamento com manutenção programada não pode ser excluído.");
+        }
+        if (movimentacaoRepository.existsByEquipamentoId(id)) {
+            throw new DomainException("Equipamento com movimentações de estoque não pode ser excluído.");
         }
         super.delete(id);
     }
