@@ -6,7 +6,7 @@ import {
   excluirPorNome,
   item,
   linha,
-  LISTA_CHECKLISTS,
+  LISTA_MODELOS,
   nomeUnico,
   preencherChecklist,
   salvar,
@@ -16,8 +16,8 @@ import {
 const criados: string[] = []
 
 async function novo(page: Page) {
-  await page.goto(`${LISTA_CHECKLISTS}/novo`)
-  await expect(page.getByRole('heading', { level: 1, name: 'Novo checklist' })).toBeVisible()
+  await page.goto(`${LISTA_MODELOS}/novo`)
+  await expect(page.getByRole('heading', { level: 1, name: 'Novo modelo de checklist' })).toBeVisible()
 }
 
 test.afterEach(async ({ page }) => {
@@ -25,15 +25,15 @@ test.afterEach(async ({ page }) => {
 })
 
 test.describe('Permissões', () => {
-  test('Supervisor e Administrador veem Checklists no menu', async ({ page, isMobile }) => {
+  test('Supervisor e Administrador veem Modelos de checklist no menu', async ({ page, isMobile }) => {
     for (const conta of [contas.supervisor, contas.administrador]) {
       await entrar(page, conta)
       if (isMobile) await page.getByRole('button', { name: 'Alternar menu' }).click()
 
-      await page.getByRole('navigation', { name: 'Principal' }).getByRole('link', { name: 'Checklists' }).click()
+      await page.getByRole('navigation', { name: 'Principal' }).getByRole('link', { name: 'Modelos de checklist' }).click()
 
-      await expect(page).toHaveURL(new RegExp(`${LISTA_CHECKLISTS}$`))
-      await expect(page.getByRole('heading', { level: 1, name: 'Checklists' })).toBeVisible()
+      await expect(page).toHaveURL(new RegExp(`${LISTA_MODELOS}$`))
+      await expect(page.getByRole('heading', { level: 1, name: 'Modelos de checklist' })).toBeVisible()
       await page.context().clearCookies()
     }
   })
@@ -41,9 +41,9 @@ test.describe('Permissões', () => {
   test('Funcionário não vê o menu nem acessa a tela ou a API', async ({ page, isMobile }) => {
     await entrar(page, contas.funcionario)
     if (isMobile) await page.getByRole('button', { name: 'Alternar menu' }).click()
-    await expect(page.getByRole('navigation', { name: 'Principal' }).getByRole('link', { name: 'Checklists' })).toHaveCount(0)
+    await expect(page.getByRole('navigation', { name: 'Principal' }).getByRole('link', { name: 'Modelos de checklist' })).toHaveCount(0)
 
-    await page.goto(`${LISTA_CHECKLISTS}/novo`)
+    await page.goto(`${LISTA_MODELOS}/novo`)
     await expect(page.getByText('Acesso não permitido para o seu perfil.')).toBeVisible()
     expect((await page.request.get('/api/checklist')).status()).toBe(403)
   })
@@ -53,7 +53,7 @@ test.describe('Listagem', () => {
   test.beforeEach(async ({ page }) => entrar(page, contas.supervisor))
 
   test('mostra os checklists da seed com a quantidade de itens', async ({ page }) => {
-    await page.goto(LISTA_CHECKLISTS)
+    await page.goto(LISTA_MODELOS)
 
     await expect(linha(page, 'Elevador — inspeção preventiva')).toContainText('5')
     await expect(linha(page, 'Ar-condicionado — revisão mensal')).toContainText('4')
@@ -63,16 +63,16 @@ test.describe('Listagem', () => {
     await page.route('**/api/checklist?*', (route) =>
       route.fulfill({ json: { content: [], page: { size: 200, number: 0, totalElements: 0, totalPages: 0 } } }),
     )
-    await page.goto(LISTA_CHECKLISTS)
+    await page.goto(LISTA_MODELOS)
 
-    await expect(page.getByText('Nenhum checklist cadastrado')).toBeVisible()
-    await page.getByRole('link', { name: 'Novo checklist' }).click()
-    await expect(page).toHaveURL(new RegExp(`${LISTA_CHECKLISTS}/novo$`))
+    await expect(page.getByText('Nenhum modelo de checklist cadastrado')).toBeVisible()
+    await page.getByRole('link', { name: 'Novo modelo' }).click()
+    await expect(page).toHaveURL(new RegExp(`${LISTA_MODELOS}/novo$`))
   })
 
   test('erro ao carregar permite tentar novamente', async ({ page }) => {
     await page.route('**/api/checklist?*', (route) => route.fulfill({ status: 500, json: { status: 500, message: 'Erro' } }))
-    await page.goto(LISTA_CHECKLISTS)
+    await page.goto(LISTA_MODELOS)
 
     await expect(page.getByText('Não foi possível carregar.')).toBeVisible()
     await expect(page.getByRole('button', { name: 'Tentar novamente' })).toBeVisible()
@@ -135,7 +135,7 @@ test.describe('Cadastro', () => {
 
     await page.getByRole('button', { name: 'Salvar' }).click()
     expect(await nome.evaluate((el: HTMLInputElement) => el.validity.valueMissing)).toBe(true)
-    await expect(page).toHaveURL(new RegExp(`${LISTA_CHECKLISTS}/novo$`))
+    await expect(page).toHaveURL(new RegExp(`${LISTA_MODELOS}/novo$`))
   })
 
   test('não salva máximo de caracteres acima de 500', async ({ page }) => {
@@ -146,13 +146,13 @@ test.describe('Cadastro', () => {
 
     const max = item(page, 1).getByLabel('Máx. caracteres')
     expect(await max.evaluate((el: HTMLInputElement) => el.validity.rangeOverflow)).toBe(true)
-    await expect(page).toHaveURL(new RegExp(`${LISTA_CHECKLISTS}/novo$`))
+    await expect(page).toHaveURL(new RegExp(`${LISTA_MODELOS}/novo$`))
   })
 
   test('validação do formulário mostra as mensagens quando o navegador não bloqueia', async ({ page }) => {
     await novo(page)
     // Desliga a validação nativa para exercitar a do Zod.
-    await page.locator('form[aria-label="Checklist"]').evaluate((form: HTMLFormElement) => (form.noValidate = true))
+    await page.locator('form[aria-label="Modelo de checklist"]').evaluate((form: HTMLFormElement) => (form.noValidate = true))
     await page.getByLabel('Nome', { exact: true }).fill('   ')
     await escolherTipo(page, 1, 'Texto')
     await item(page, 1).getByLabel('Máx. caracteres').fill('0')
@@ -207,7 +207,7 @@ test.describe('Cadastro', () => {
     await page.getByRole('button', { name: 'Salvar' }).click()
 
     await expect(page.getByRole('alert').filter({ hasText: 'Item 1: o máximo' })).toBeVisible()
-    await expect(page).toHaveURL(new RegExp(`${LISTA_CHECKLISTS}/novo$`))
+    await expect(page).toHaveURL(new RegExp(`${LISTA_MODELOS}/novo$`))
   })
 
 })
@@ -228,7 +228,7 @@ test.describe('Salvar permanece na tela', () => {
     await item(page, 2).getByLabel('Pergunta').fill('Segunda')
     expect(await salvar(page)).toBe(id)
 
-    await page.goto(LISTA_CHECKLISTS)
+    await page.goto(LISTA_MODELOS)
     await expect(linha(page, nome)).toHaveCount(1)
     await expect(linha(page, nome)).toContainText('2')
   })
@@ -279,7 +279,7 @@ test.describe('Cancelar com alterações não salvas', () => {
     await page.getByRole('button', { name: 'Cancelar' }).click()
 
     await expect(dialogoDescarte(page)).toHaveCount(0)
-    await expect(page).toHaveURL(new RegExp(`${LISTA_CHECKLISTS}$`))
+    await expect(page).toHaveURL(new RegExp(`${LISTA_MODELOS}$`))
   })
 
   test('com alterações, pede confirmação e informa a perda', async ({ page }) => {
@@ -302,7 +302,7 @@ test.describe('Cancelar com alterações não salvas', () => {
     await dialogoDescarte(page).getByRole('button', { name: 'Cancelar' }).click()
 
     await expect(dialogoDescarte(page)).toHaveCount(0)
-    await expect(page).toHaveURL(new RegExp(`${LISTA_CHECKLISTS}/novo$`))
+    await expect(page).toHaveURL(new RegExp(`${LISTA_MODELOS}/novo$`))
     await expect(page.getByLabel('Nome', { exact: true })).toHaveValue('Rascunho')
   })
 
@@ -314,12 +314,12 @@ test.describe('Cancelar com alterações não salvas', () => {
 
     await dialogoDescarte(page).getByRole('button', { name: 'Descartar' }).click()
 
-    await expect(page).toHaveURL(new RegExp(`${LISTA_CHECKLISTS}$`))
+    await expect(page).toHaveURL(new RegExp(`${LISTA_MODELOS}$`))
     await expect(linha(page, nome)).toHaveCount(0)
   })
 
   test('mudança só nos itens também conta como alteração', async ({ page }) => {
-    await page.goto(`${LISTA_CHECKLISTS}/7c3a9e20-0001-4b1d-9c00-000000000001`)
+    await page.goto(`${LISTA_MODELOS}/7c3a9e20-0001-4b1d-9c00-000000000001`)
     await expect(item(page, 2)).toBeVisible()
 
     await item(page, 2).getByRole('button', { name: 'Mover para cima' }).click()
@@ -329,7 +329,7 @@ test.describe('Cancelar com alterações não salvas', () => {
   })
 
   test('desfazer a alteração manualmente dispensa a confirmação', async ({ page }) => {
-    await page.goto(`${LISTA_CHECKLISTS}/7c3a9e20-0001-4b1d-9c00-000000000001`)
+    await page.goto(`${LISTA_MODELOS}/7c3a9e20-0001-4b1d-9c00-000000000001`)
     const nome = page.getByLabel('Nome', { exact: true })
     const original = await nome.inputValue()
 
@@ -338,7 +338,7 @@ test.describe('Cancelar com alterações não salvas', () => {
     await page.getByRole('button', { name: 'Cancelar' }).click()
 
     await expect(dialogoDescarte(page)).toHaveCount(0)
-    await expect(page).toHaveURL(new RegExp(`${LISTA_CHECKLISTS}$`))
+    await expect(page).toHaveURL(new RegExp(`${LISTA_MODELOS}$`))
   })
 
   test('depois de salvar, Cancelar não pede confirmação', async ({ page }) => {
@@ -351,7 +351,7 @@ test.describe('Cancelar com alterações não salvas', () => {
     await page.getByRole('button', { name: 'Cancelar' }).click()
 
     await expect(dialogoDescarte(page)).toHaveCount(0)
-    await expect(page).toHaveURL(new RegExp(`${LISTA_CHECKLISTS}$`))
+    await expect(page).toHaveURL(new RegExp(`${LISTA_MODELOS}$`))
   })
 })
 
@@ -371,7 +371,7 @@ test.describe('Edição e exclusão', () => {
     const novoNome = nomeUnico('E2E editado')
     criados.push(novoNome)
     await linha(page, nome).getByRole('link', { name: `Editar ${nome}` }).click()
-    await expect(page.getByRole('heading', { level: 1, name: 'Editar checklist' })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1, name: 'Editar modelo de checklist' })).toBeVisible()
 
     await page.getByLabel('Nome', { exact: true }).fill(novoNome)
     await page.getByRole('button', { name: 'Adicionar item' }).click()
@@ -385,7 +385,7 @@ test.describe('Edição e exclusão', () => {
   test('excluir pede confirmação e cancelar mantém o checklist', async ({ page }) => {
     await linha(page, nome).getByRole('button', { name: `Excluir ${nome}` }).click()
 
-    const dialogo = page.getByRole('alertdialog', { name: 'Excluir checklist?' })
+    const dialogo = page.getByRole('alertdialog', { name: 'Excluir modelo de checklist?' })
     await expect(dialogo).toContainText(nome)
     await expect(dialogo.getByRole('button', { name: 'Cancelar' })).toBeFocused()
     await dialogo.getByRole('button', { name: 'Cancelar' }).click()
@@ -397,14 +397,14 @@ test.describe('Edição e exclusão', () => {
     await linha(page, nome).getByRole('button', { name: `Excluir ${nome}` }).click()
     await page.getByRole('alertdialog').getByRole('button', { name: 'Excluir' }).click()
 
-    await expect(page.getByText('Checklist excluído.')).toBeVisible()
+    await expect(page.getByText('Modelo de checklist excluído.')).toBeVisible()
     await expect(linha(page, nome)).toHaveCount(0)
   })
 
   test('checklist inexistente mostra aviso', async ({ page }) => {
-    await page.goto(`${LISTA_CHECKLISTS}/00000000-0000-0000-0000-000000000000`)
+    await page.goto(`${LISTA_MODELOS}/00000000-0000-0000-0000-000000000000`)
 
-    await expect(page.getByText('Checklist não encontrado.')).toBeVisible()
+    await expect(page.getByText('Modelo de checklist não encontrado.')).toBeVisible()
   })
 })
 
@@ -427,7 +427,7 @@ test.describe('Layout e atalhos do editor', () => {
     await page.getByLabel('Nome', { exact: true }).press('Enter')
 
     await expect(item(page, 1).getByLabel('Pergunta')).toBeFocused()
-    await expect(page).toHaveURL(new RegExp(`${LISTA_CHECKLISTS}/novo$`))
+    await expect(page).toHaveURL(new RegExp(`${LISTA_MODELOS}/novo$`))
   })
 
   test('Enter na última pergunta cria um item e foca nele', async ({ page }) => {
@@ -574,7 +574,7 @@ test('estrutura HTML5 do formulário', async ({ page }) => {
 
   await expect(page.locator('main')).toHaveCount(1)
   await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1)
-  await expect(page.getByRole('form', { name: 'Checklist' })).toBeVisible()
+  await expect(page.getByRole('form', { name: 'Modelo de checklist' })).toBeVisible()
   await expect(page.getByRole('group', { name: 'Item 1', exact: true })).toBeVisible()
   await expect(page.getByRole('heading', { level: 2, name: /Itens/ })).toBeVisible()
 })

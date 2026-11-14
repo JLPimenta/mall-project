@@ -1,5 +1,7 @@
 import { PencilIcon, Trash2Icon } from 'lucide-react'
 import { Link } from 'react-router'
+import { LinhaClicavel } from '@/components/shared/linha-clicavel'
+import { useOrigemAtual } from '@/lib/navegacao'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { formatarDataHora } from '@/lib/format'
@@ -11,6 +13,7 @@ type ChecklistTableProps = {
 }
 
 export function ChecklistTable({ checklists, onExcluir }: ChecklistTableProps) {
+  const origem = useOrigemAtual()
   return (
     <div className="rounded-lg border">
       <Table>
@@ -26,7 +29,7 @@ export function ChecklistTable({ checklists, onExcluir }: ChecklistTableProps) {
         </TableHeader>
         <TableBody>
           {checklists.map((checklist) => (
-            <TableRow key={checklist.id}>
+            <LinhaClicavel key={checklist.id} para={checklist.id}>
               <TableCell className="font-medium whitespace-normal">{checklist.nome}</TableCell>
               <TableCell className="text-right tabular-nums">{checklist.itens.length}</TableCell>
               <TableCell className="hidden text-muted-foreground md:table-cell">
@@ -35,7 +38,7 @@ export function ChecklistTable({ checklists, onExcluir }: ChecklistTableProps) {
               <TableCell>
                 <div className="flex justify-end gap-1">
                   <Button asChild variant="ghost" size="icon-sm">
-                    <Link to={checklist.id} aria-label={`Editar ${checklist.nome}`}>
+                    <Link to={checklist.id} state={origem} aria-label={`Editar ${checklist.nome}`}>
                       <PencilIcon aria-hidden />
                     </Link>
                   </Button>
@@ -44,7 +47,7 @@ export function ChecklistTable({ checklists, onExcluir }: ChecklistTableProps) {
                   </Button>
                 </div>
               </TableCell>
-            </TableRow>
+            </LinhaClicavel>
           ))}
         </TableBody>
       </Table>

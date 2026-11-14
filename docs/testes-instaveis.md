@@ -9,6 +9,9 @@ Registro de testes que passaram e falharam sem mudança de código, com causa e 
 | 3 | `auth.spec.ts` (6 testes, só desktop) | Falhas na primeira execução logo após recriar o container do frontend | O teste começou enquanto o nginx reiniciava | Ambiente | Prevenido: `e2e/global-setup.ts` espera até 60 s o ambiente ficar pronto antes de iniciar |
 | 4 | Suíte inteira (login) | "Falha na requisição." e 401 sem corpo em todo login | O `mvnw test` recompilou as classes; o devtools do backend dev recarregou no meio e subiu sem `SecurityConfiguration` | Ambiente | Detectado: `e2e/global-setup.ts` reprova a suíte com mensagem específica quando o 401 vem sem o JSON da aplicação. Prevenção: não compilar o backend durante o E2E |
 
+| 5 | `listagens.spec.ts` › filtra por código, nome… | A linha "CFTV-L2" às vezes não aparecia | Texto de busca errado no teste ("camaras"). O teste passava porque conferia a linha logo após "Limpar filtros", quando a lista inteira ainda estava visível (sinal antigo) | Teste | Corrigido: busca certa e conferência da quantidade de linhas, que só bate depois do filtro aplicado |
+| 6 | Agenda › "Limpar filtros" (descoberto ao investigar o caso 5) | Um dos dois filtros voltava depois de limpar | Defeito real: o `setSearchParams(fn)` entrega à `fn` os parâmetros da última renderização. Duas atualizações seguidas faziam a segunda desfazer a primeira | Código | Corrigido em `lib/filtros.ts` (parte de `window.location` e aplica várias mudanças de uma vez), com teste próprio |
+
 ## Riscos ainda presentes
 
 - **Toasts como confirmação:** `Checklist excluído.` e o toast após `salvar()` são aceitáveis só porque há outra sincronização antes (resposta da API ou remoção da linha).

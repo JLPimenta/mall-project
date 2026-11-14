@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 /** Cadastro de modelos de checklist. Restrito a Administrador e Supervisor em SecurityConfiguration. */
 @RestController
 @RequestMapping(value = "/api/checklist", produces = "application/json")
-@Tag(name = "Checklist", description = "Modelos de checklist de manutenção.")
+@Tag(name = "Modelo de checklist", description = "Modelos de checklist usados nas tarefas.")
 public class ChecklistController extends BaseController<Checklist, ChecklistRequest, ChecklistResponse> {
 
     protected ChecklistController(final IChecklistMapper mapper, final IChecklistService service) {

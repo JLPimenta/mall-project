@@ -58,6 +58,8 @@ public abstract class BaseService<T extends BaseEntity> implements IBaseService<
         T existent = repository.findById(id).orElseThrow(() -> new EntityNotFoundException("Item não encontrado."));
 
         bind(existent, entity);
+        // As regras valem também na edição. validate() deve ignorar o próprio registro (ex.: unicidade por id).
+        validate(existent);
 
         return repository.save(existent);
     }

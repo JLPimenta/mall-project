@@ -98,12 +98,16 @@ test.describe('Permissões por perfil', () => {
     }
   })
 
-  test('Funcionário não vê a Central no menu e é bloqueado ao acessar pela URL', async ({ page, isMobile }) => {
+  test('Funcionário entra em Tarefas, não vê a Central no menu e é bloqueado pela URL', async ({ page, isMobile }) => {
     await entrar(page, contas.funcionario)
 
-    await expect(page).toHaveURL(/\/$/)
-    await expect(page.getByText('Nenhum módulo disponível para o seu perfil.')).toBeVisible()
-    await expect((await navegacao(page, isMobile)).getByRole('link', { name: 'Central de Controle' })).toHaveCount(0)
+    await expect(page).toHaveURL(/\/tarefas$/)
+    const menu = await navegacao(page, isMobile)
+    await expect(menu.getByRole('link', { name: 'Tarefas' })).toBeVisible()
+    await expect(menu.getByRole('link', { name: 'Central de Controle' })).toHaveCount(0)
+    for (const restrito of ['Manutenções programadas', 'Modelos de checklist', 'Equipamentos', 'Equipes']) {
+      await expect(menu.getByRole('link', { name: restrito })).toHaveCount(0)
+    }
 
     await page.goto('/central')
     await expect(page.getByText('Acesso não permitido para o seu perfil.')).toBeVisible()
@@ -125,7 +129,8 @@ test.describe('Sessão', () => {
 
     await preencherLogin(page, contas.funcionario.email, SENHA_DEMO)
 
-    await expect(page).toHaveURL(/\/$/)
+    // Vai para o primeiro módulo permitido (Tarefas), não para a Central.
+    await expect(page).toHaveURL(/\/tarefas$/)
   })
 
   test('sessão continua após recarregar a página', async ({ page }) => {

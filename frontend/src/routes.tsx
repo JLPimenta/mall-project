@@ -1,19 +1,37 @@
 import type { ReactNode } from 'react'
-import { createBrowserRouter } from 'react-router'
+import { createBrowserRouter, type RouteObject } from 'react-router'
 import { AppShell } from '@/components/layout/app-shell'
-import { perfisDaRota } from '@/components/layout/navigation'
 import { RequireAuth } from '@/features/auth/components/require-auth'
 import { RequirePerfil } from '@/features/auth/components/require-perfil'
+import { TarefasPage } from '@/pages/tarefas-page'
 import { CentralPage } from '@/pages/central-page'
 import { ChecklistFormPage } from '@/pages/checklist-form-page'
 import { ChecklistsPage } from '@/pages/checklists-page'
+import { EquipamentoFormPage } from '@/pages/equipamento-form-page'
+import { EquipamentosPage } from '@/pages/equipamentos-page'
+import { EquipeFormPage } from '@/pages/equipe-form-page'
+import { EquipesPage } from '@/pages/equipes-page'
 import { HomeRedirect } from '@/pages/home-redirect'
 import { LoginPage } from '@/pages/login-page'
 import { NotFoundPage } from '@/pages/not-found-page'
+import { ManutencaoProgramadaFormPage } from '@/pages/manutencao-programada-form-page'
+import { ManutencoesProgramadasPage } from '@/pages/manutencoes-programadas-page'
 
 /** Aplica os perfis do item de menu correspondente à rota. */
 function protegida(rota: string, pagina: ReactNode) {
-  return <RequirePerfil perfis={perfisDaRota(rota) ?? []}>{pagina}</RequirePerfil>
+  return <RequirePerfil rota={rota}>{pagina}</RequirePerfil>
+}
+
+/** Listagem + cadastro novo + edição, todos com os perfis do item de menu. */
+function cadastro(rota: string, lista: ReactNode, formulario: ReactNode, novo = 'novo'): RouteObject {
+  return {
+    path: rota.slice(1),
+    children: [
+      { index: true, element: protegida(rota, lista) },
+      { path: novo, element: protegida(rota, formulario) },
+      { path: ':id', element: protegida(rota, formulario) },
+    ],
+  }
 }
 
 export const router = createBrowserRouter([
@@ -27,14 +45,11 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <HomeRedirect /> },
       { path: 'central', element: protegida('/central', <CentralPage />) },
-      {
-        path: 'manutencao/checklists',
-        children: [
-          { index: true, element: protegida('/manutencao/checklists', <ChecklistsPage />) },
-          { path: 'novo', element: protegida('/manutencao/checklists', <ChecklistFormPage />) },
-          { path: ':id', element: protegida('/manutencao/checklists', <ChecklistFormPage />) },
-        ],
-      },
+      { path: 'tarefas', element: protegida('/tarefas', <TarefasPage />) },
+      cadastro('/planejamento/manutencoes-programadas', <ManutencoesProgramadasPage />, <ManutencaoProgramadaFormPage />, 'nova'),
+      cadastro('/planejamento/modelos-checklist', <ChecklistsPage />, <ChecklistFormPage />),
+      cadastro('/cadastros/equipamentos', <EquipamentosPage />, <EquipamentoFormPage />),
+      cadastro('/cadastros/equipes', <EquipesPage />, <EquipeFormPage />, 'nova'),
       { path: '*', element: <NotFoundPage /> },
     ],
   },

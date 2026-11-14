@@ -5,6 +5,7 @@ import {
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -12,7 +13,7 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar'
 import { useSessao } from '@/features/auth/hooks'
-import { itensPermitidos } from './navigation'
+import { gruposPermitidos } from './navigation'
 
 export function AppSidebar() {
   const { pathname } = useLocation()
@@ -28,25 +29,28 @@ export function AppSidebar() {
         </div>
       </SidebarHeader>
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <nav aria-label="Principal">
-              <SidebarMenu>
-                {itensPermitidos(usuario?.perfil).map((item) => (
-                  <SidebarMenuItem key={item.to}>
-                    <SidebarMenuButton asChild isActive={pathname.startsWith(item.to)} tooltip={item.title}>
-                      {/* No celular o menu é uma gaveta; fecha ao navegar para não cobrir a página. */}
-                      <NavLink to={item.to} onClick={() => isMobile && setOpenMobile(false)}>
-                        <item.icon aria-hidden />
-                        <span>{item.title}</span>
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </nav>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        <nav aria-label="Principal">
+          {gruposPermitidos(usuario?.perfil).map((grupo) => (
+            <SidebarGroup key={grupo.titulo} aria-labelledby={`grupo-${grupo.titulo}`}>
+              <SidebarGroupLabel id={`grupo-${grupo.titulo}`}>{grupo.titulo}</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {grupo.itens.map((item) => (
+                    <SidebarMenuItem key={item.to}>
+                      <SidebarMenuButton asChild isActive={pathname.startsWith(item.to)} tooltip={item.title}>
+                        {/* No celular o menu é uma gaveta; fecha ao navegar para não cobrir a página. */}
+                        <NavLink to={item.to} onClick={() => isMobile && setOpenMobile(false)}>
+                          <item.icon aria-hidden />
+                          <span>{item.title}</span>
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          ))}
+        </nav>
       </SidebarContent>
     </Sidebar>
   )

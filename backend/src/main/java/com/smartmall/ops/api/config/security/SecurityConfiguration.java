@@ -51,6 +51,11 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, LOGIN_URL).permitAll()
                         .requestMatchers("/api/checklist", "/api/checklist/**").hasAnyRole(GESTAO)
+                        .requestMatchers("/api/equipamento", "/api/equipamento/**").hasAnyRole(GESTAO)
+                        .requestMatchers("/api/equipe", "/api/equipe/**").hasAnyRole(GESTAO)
+                        .requestMatchers("/api/usuario", "/api/usuario/**").hasAnyRole(GESTAO)
+                        .requestMatchers("/api/manutencao-programada", "/api/manutencao-programada/**").hasAnyRole(GESTAO)
+                        .requestMatchers(HttpMethod.POST, "/api/tarefa/*/cancelar", "/api/tarefa/*/restaurar").hasAnyRole(GESTAO)
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().permitAll())
                 .exceptionHandling(ex -> ex

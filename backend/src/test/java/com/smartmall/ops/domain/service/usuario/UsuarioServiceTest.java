@@ -36,7 +36,7 @@ class UsuarioServiceTest {
 
     @Test
     void gravaSenhaComoHash() {
-        when(repository.existsByEmailIgnoreCase("novo@smartmall.local")).thenReturn(false);
+        when(repository.existeEmail("novo@smartmall.local", null)).thenReturn(false);
         when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         var salvo = service.create(new Usuario("Novo", "novo@smartmall.local", "segredo1", Perfil.FUNCIONARIO, true));
@@ -47,7 +47,7 @@ class UsuarioServiceTest {
 
     @Test
     void rejeitaEmailDuplicado() {
-        when(repository.existsByEmailIgnoreCase("admin@smartmall.local")).thenReturn(true);
+        when(repository.existeEmail("admin@smartmall.local", null)).thenReturn(true);
 
         assertThatThrownBy(() -> service.create(new Usuario("X", "admin@smartmall.local", "segredo1", Perfil.ADMINISTRADOR, true)))
                 .isInstanceOf(DomainException.class)

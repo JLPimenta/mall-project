@@ -15,7 +15,7 @@ public class PisoService extends BaseService<Piso> implements IPisoService {
 
     @Override
     public void validate(Piso piso) throws DomainException {
-        if (getRepository().existsByCodigoIgnoreCase(piso.getCodigo())) {
+        if (getRepository().existeCodigo(piso.getCodigo(), piso.getId())) {
             throw new DomainException("Já existe um piso com o código %s.", piso.getCodigo());
         }
     }

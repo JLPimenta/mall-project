@@ -5,6 +5,7 @@ import com.smartmall.ops.domain.entity.Checklist;
 import com.smartmall.ops.domain.entity.ChecklistItem;
 import com.smartmall.ops.domain.entity.enums.TipoResposta;
 import com.smartmall.ops.domain.repository.checklist.ChecklistRepository;
+import com.smartmall.ops.domain.repository.manutencao.ManutencaoProgramadaRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,11 +34,14 @@ class ChecklistServiceTest {
     @Mock
     private ChecklistRepository repository;
 
+    @Mock
+    private ManutencaoProgramadaRepository programadaRepository;
+
     private ChecklistService service;
 
     @BeforeEach
     void setUp() {
-        service = new ChecklistService(repository);
+        service = new ChecklistService(repository, programadaRepository);
         lenient().when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
     }
 

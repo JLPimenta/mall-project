@@ -1,20 +1,20 @@
 import { ShieldXIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { podeAcessar } from '@/components/layout/navigation'
 import { EmptyState } from '@/components/shared/empty-state'
 import { useSessao } from '../hooks'
-import { temPerfil } from '../permissoes'
-import type { Perfil } from '../types'
 
 type RequirePerfilProps = {
-  perfis: readonly Perfil[]
+  /** Rota do item de menu; os perfis permitidos vêm de navigation.ts. */
+  rota: string
   children: ReactNode
 }
 
 /** Bloqueio de interface. A autorização efetiva é feita no backend. */
-export function RequirePerfil({ perfis, children }: RequirePerfilProps) {
+export function RequirePerfil({ rota, children }: RequirePerfilProps) {
   const { data: usuario } = useSessao()
 
-  if (!temPerfil(usuario?.perfil, perfis)) {
+  if (!podeAcessar(usuario?.perfil, rota)) {
     return <EmptyState title="Acesso não permitido para o seu perfil." icon={ShieldXIcon} />
   }
 

@@ -10,4 +10,12 @@
     <include file="db/changes/usuario/20261114-2-seed-usuario.sql" context="dev"/>
     <include file="db/changes/checklist/20261114-1-cria-checklist.sql"/>
     <include file="db/changes/checklist/20261114-2-seed-checklist.sql" context="dev"/>
+    <include file="db/changes/equipamento/20261114-1-cria-equipamento.sql"/>
+    <include file="db/changes/equipamento/20261114-2-seed-equipamento.sql" context="dev"/>
+    <include file="db/changes/usuario/20261114-3-seed-funcionarios.sql" context="dev"/>
+    <include file="db/changes/equipe/20261114-1-cria-equipe.sql"/>
+    <include file="db/changes/equipe/20261114-2-seed-equipe.sql" context="dev"/>
+    <include file="db/changes/manutencao/20261114-1-cria-plano-manutencao.sql"/>
+    <include file="db/changes/manutencao/20261114-2-seed-plano-manutencao.sql" context="dev"/>
+    <include file="db/changes/tarefa/20261115-1-renomeia-para-tarefa.sql"/>
 </databaseChangeLog>

@@ -19,10 +19,10 @@ test.describe('Estrutura HTML5 do layout', () => {
     await entrar(page, contas.supervisor)
 
     await page.getByRole('button', { name: 'Alternar menu' }).click()
-    await page.getByRole('navigation', { name: 'Principal' }).getByRole('link', { name: 'Checklists' }).click()
+    await page.getByRole('navigation', { name: 'Principal' }).getByRole('link', { name: 'Modelos de checklist' }).click()
 
     await expect(page.getByRole('navigation', { name: 'Principal' })).toBeHidden()
-    await expect(page.getByRole('heading', { level: 1, name: 'Checklists' })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1, name: 'Modelos de checklist' })).toBeVisible()
   })
 
   test('tela de login tem um main e um h1', async ({ page }) => {

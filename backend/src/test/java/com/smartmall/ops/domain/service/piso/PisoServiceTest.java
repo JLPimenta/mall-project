@@ -26,7 +26,7 @@ class PisoServiceTest {
     @Test
     void criaPisoComCodigoNovo() {
         var piso = new Piso("L3", "Piso L3", 3);
-        when(repository.existsByCodigoIgnoreCase("L3")).thenReturn(false);
+        when(repository.existeCodigo("L3", null)).thenReturn(false);
         when(repository.save(any())).thenReturn(piso);
 
         service.create(piso);
@@ -37,7 +37,7 @@ class PisoServiceTest {
     @Test
     void rejeitaCodigoDuplicado() {
         var piso = new Piso("L1", "Piso L1", 1);
-        when(repository.existsByCodigoIgnoreCase("L1")).thenReturn(true);
+        when(repository.existeCodigo("L1", null)).thenReturn(true);
 
         assertThatThrownBy(() -> service.create(piso))
                 .isInstanceOf(DomainException.class)

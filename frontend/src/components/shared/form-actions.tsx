@@ -8,6 +8,8 @@ type FormActionsProps = {
   alterado: boolean
   salvando: boolean
   onCancel: () => void
+  /** Registro que não pode ser editado: só "Voltar". */
+  somenteLeitura?: boolean
 }
 
 /**
@@ -15,18 +17,20 @@ type FormActionsProps = {
  * Cancelar com alterações pendentes pede confirmação antes de descartar.
  * As margens negativas compensam o padding do <main>.
  */
-export function FormActions({ alterado, salvando, onCancel }: FormActionsProps) {
+export function FormActions({ alterado, salvando, onCancel, somenteLeitura }: FormActionsProps) {
   const [confirmando, setConfirmando] = useState(false)
 
   return (
     <div className="sticky bottom-0 z-20 -mx-4 flex justify-end gap-2 border-t bg-background/95 px-4 py-3 backdrop-blur md:-mx-6 md:px-6">
       <Button type="button" variant="outline" onClick={() => (alterado ? setConfirmando(true) : onCancel())}>
-        Cancelar
+        {somenteLeitura ? 'Voltar' : 'Cancelar'}
       </Button>
-      <Button type="submit" disabled={salvando}>
-        {salvando && <Loader2Icon className="animate-spin" aria-hidden />}
-        Salvar
-      </Button>
+      {!somenteLeitura && (
+        <Button type="submit" disabled={salvando}>
+          {salvando && <Loader2Icon className="animate-spin" aria-hidden />}
+          Salvar
+        </Button>
+      )}
 
       <ConfirmDialog
         open={confirmando}

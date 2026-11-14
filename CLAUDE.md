@@ -8,6 +8,25 @@ Referências obrigatórias antes de implementar qualquer funcionalidade:
 - `docs/SmartMall_Ops_AI_Documentacao_Inicial.md` — requisitos (RF/RNF), telas, modelo de dados e critérios de aceite.
 - `INSTRUCTIONS.md` e `docs/dist/` — protótipo HTML5/JS existente. Serve de referência de fluxo e identidade visual, não de código a ser copiado.
 
+## Glossário do domínio (usar estes nomes em tela, código, API e banco)
+
+```
+Chamado ──► Plano de ação (1..n tarefas) ──┐
+                                            ├──► Tarefa ──► execução (checklist) ──► validação
+Manutenção programada (recorrência) ────────┘
+```
+
+| Termo | O que é | No código | Situação |
+|---|---|---|---|
+| **Tarefa** | Unidade de trabalho com data, equipe, equipamento, status e, no futuro, prazo (SLA). É onde os dois fluxos chegam. | `Tarefa`, `/api/tarefa`, tela `/tarefas` | Implementado (gerada por manutenção programada) |
+| **Origem da tarefa** | De onde a tarefa veio | `OrigemTarefa`: `MANUTENCAO_PROGRAMADA`; `CHAMADO` entra com os chamados | Implementado |
+| **Manutenção programada** | Agendamento recorrente (ou único) que gera tarefas numa frequência | `ManutencaoProgramada`, `/api/manutencao-programada`, `/planejamento/manutencoes-programadas` | Implementado |
+| **Modelo de checklist** | Molde de verificação usado pelas tarefas; o checklist preenchido fica na tarefa | `Checklist` (nome técnico mantido), `/api/checklist`, `/planejamento/modelos-checklist` | Implementado |
+| **Chamado** | Registro de um problema (ocorrência), com triagem | — | A implementar |
+| **Plano de ação** | Conjunto de uma ou várias tarefas geradas por um chamado | — | A implementar |
+
+Não usar "plano" sozinho (ambíguo com Plano de ação) nem "agenda" como nome de módulo: a tela é Tarefas, e o calendário é só uma forma de vê-las. Menu: **Operação** (Central de Controle, Tarefas), **Planejamento** (Manutenções programadas, Modelos de checklist), **Cadastros**.
+
 ## Decisões de arquitetura
 
 | Tema | Decisão | Observação |
@@ -79,8 +98,13 @@ Para cada novo recurso, criar o conjunto completo:
 2. Changeset Liquibase em `resources/db/changes/<recurso>/AAAAMMDD-N-descricao.sql`, incluído em `db/changelog-master.xml`. `ddl-auto=validate`: o schema vem só do Liquibase.
 3. `model/<recurso>/<Recurso>Request` e `<Recurso>Response` (Lombok `@Getter @Setter @Builder @NoArgsConstructor @AllArgsConstructor`), validação com Bean Validation no Request.
 4. `I<Recurso>Mapper` com MapStruct (`@Mapper(componentModel = "spring")`) estendendo `IBaseMapper`.
+   - **Relações:** o Request recebe ids (`pisoId`). O mapper converte o id em entidade "referência" com `Referencias.porId(id, Piso::new)`; o serviço troca pela entidade real e lança `DomainException("Piso não encontrado.")` se o id não existir. Exemplo: `IEquipamentoMapper` + `EquipamentoService.preparar`.
+   - **Response:** expõe resumos (`Resumo`: id, nome, código), nunca a entidade relacionada inteira.
 5. `<Recurso>Repository` estendendo `BaseRepository<T>`.
 6. `I<Recurso>Service` estendendo `IBaseService<T>` e `<Recurso>Service` estendendo `BaseService<T>`. Regras de negócio em `validate()` ou em métodos próprios do serviço.
+   - **`validate()` roda na criação e na edição** (`BaseService.update` também chama). Unicidade deve ignorar o próprio registro: `@Query("... and (:id is null or e.id <> :id)") boolean existeCodigo(String codigo, String id)`.
+   - **Exclusão de registro em uso:** sobrescrever `delete` e lançar `DomainException` com o motivo ("Equipamento com manutenção programada não pode ser excluído."). Não depender do erro genérico de chave estrangeira.
+   - **"Agora":** injetar `java.time.Clock` (bean em `TempoConfiguration`) e usar `LocalDateTime.now(clock)`, nunca `now()` direto. Nos testes, `Clock.fixed(...)`. O fuso da aplicação é `America/Araguaina` (variável `APP_FUSO_HORARIO`), definido no `main`.
 7. Controller estendendo `BaseController` (CRUD) ou `BaseSearchController` (somente leitura), com `@Tag` do Swagger.
 
 Regras:
@@ -125,7 +149,7 @@ frontend/src
 ├── components
 │   ├── ui/          Componentes do shadcn (gerados via CLI; editar com parcimônia)
 │   ├── layout/      AppShell, Sidebar, Header, PageHeader
-│   └── shared/      Componentes reutilizáveis do domínio (EmptyState, ErrorState, PageHeader, SimulatedBadge, ConfirmDialog, FormActions, LimitedInput)
+│   └── shared/      Componentes reutilizáveis do domínio (ver lista abaixo)
 ├── features/<modulo>/   ocorrencias, central, tarefas, equipamentos, manutencao, historico, auth
 │   ├── components/  Componentes específicos do módulo
 │   ├── api.ts       Funções de acesso à API do módulo
@@ -133,9 +157,28 @@ frontend/src
 │   ├── schemas.ts   Schemas Zod
 │   └── types.ts     Tipos espelhando os Response/Request do backend
 ├── pages/           Uma página por rota; compõe componentes, sem lógica pesada
-├── lib/             api client (fetch), utils (cn), formatadores
+├── lib/             api client, cadastro (useAcoesCadastro), datas, use-agora, utils (cn)
 └── routes.tsx
 ```
+
+`components/shared` (usar antes de criar outro):
+
+| Componente | Uso |
+|---|---|
+| `CadastroForm` | Envolve todo formulário de cadastro/edição: salvar e permanecer, descarte, `data-alterado`, `somenteLeitura` |
+| `FormActions` | Barra fixa Cancelar/Salvar (já incluída no `CadastroForm`) |
+| `RegistroLoader` | Carregando / erro / "não encontrado" de uma tela de edição |
+| `SelectField` | Select ligado ao RHF com rótulo e erro |
+| `LimitedInput`, `LimitedTextarea` | Texto com limite obrigatório e contador |
+| `ExcluirDialog`, `ConfirmDialog` | Confirmação de exclusão (mostra o nome) e de ações em geral |
+| `StatusBadge` | Status com tom padronizado (`neutro`, `info`, `sucesso`, `atencao`, `perigo`) |
+| `BotaoNovo` | Ação primária "Novo …" (azul), levando a origem |
+| `LinhaClicavel` | Linha de tabela que abre o registro |
+| `BarraFiltros`, `FiltroTexto`, `FiltroSelect`, `FiltroData` | Filtros de listagem (estado na URL com `useFiltrosUrl`) |
+| `SemResultado` | Lista filtrada sem resultado, com "Limpar filtros" |
+| `PageHeader`, `EmptyState`, `ErrorState`, `SimulatedBadge` | Estrutura e estados de tela |
+
+Uma tela de cadastro nova segue o modelo de `pages/equipamento-form-page.tsx`: `useAcoesCadastro` + `RegistroLoader` + `<XForm>` com `CadastroForm`. A listagem segue `pages/equipamentos-page.tsx`.
 
 Componentização:
 
@@ -143,7 +186,13 @@ Componentização:
 - Componente com mais de ~150 linhas ou mais de uma responsabilidade deve ser dividido.
 - Antes de criar componente, verificar se já existe em `ui/` ou `shared/`. Adicionar componentes shadcn com `npx shadcn@latest add <nome>`.
 - Props tipadas com `type`; sem `any`.
-- Menu lateral definido em `components/layout/navigation.ts`; só entra item de módulo já implementado. Cada item declara `perfis`; a rota usa `RequirePerfil` com `perfisDaRota(...)`, e o menu filtra pelo mesmo campo.
+- **Menu lateral** (`components/layout/navigation.ts`): grupos (Operação, Manutenção, Cadastros); só entra item de módulo já implementado.
+  - Cada item declara `perfis`, iguais aos do `SecurityConfiguration`. Item **sem** `perfis` libera todos os perfis.
+  - A rota usa `<RequirePerfil rota="...">`, que consulta `podeAcessar`; rota fora do menu é negada por padrão.
+  - A ordem dos itens define a tela inicial de cada perfil.
+- **Datas** (`lib/datas.ts`): o backend envia `LocalDate`/`LocalDateTime` sem fuso.
+  - Usar `paraIsoData`/`deIsoData`, nunca `toISOString()`, que converte para UTC e muda o dia.
+  - "Agora" na renderização vem de `useAgora()`; `new Date()` direto no render é impuro e o lint acusa.
 - Sessão: `useSessao()` (`features/auth/hooks.ts`). Rotas internas ficam sob `RequireAuth`. Um 401 em qualquer chamada limpa a sessão e leva ao login (`lib/query-client.ts`).
 - Chamadas HTTP só via `lib/api.ts` (prefixo `/api`, erros como `ApiError`). Listagens paginadas retornam `Page<T>` (`content` + `page`).
 - Status e prioridade sempre pelos componentes compartilhados, para manter cor e texto consistentes.
@@ -174,6 +223,28 @@ Objetivo: o usuário vê o máximo de informação útil sem rolar, sem áreas v
 - **Teclado:** Enter avança para o próximo campo lógico e, no último item, cria um novo. Nunca envia o formulário sem querer. Reordenar funciona por arrastar (mouse, toque e teclado) e por botões ↑ ↓.
 - **Densidade:** espaçamento vertical entre grupos `gap-6`; dentro de linhas `gap-2`; altura de linha de item no desktop abaixo de 64 px (há teste).
 - **Contador e mensagens dentro do espaço existente:** contadores ficam dentro do campo, para não deslocar o layout.
+- **Botões:** a ação principal da página (Novo …, Salvar) usa a variante padrão (azul), sempre via `BotaoNovo` nos "Novo …". `outline`/`ghost` só para ações secundárias.
+
+## Listagens (obrigatório)
+
+- **Filtros:** toda listagem com cadastro tem `BarraFiltros` (`role="search"`) logo abaixo do título, com `FiltroTexto`, `FiltroSelect` e `FiltroData` (`components/shared/filtros.tsx`). "Limpar filtros" aparece quando há filtro ativo.
+  - **Estado na URL:** `useFiltrosUrl` (`lib/filtros.ts`), para os filtros sobreviverem ao recarregar e à volta de um cadastro.
+  - **Várias mudanças de uma vez:** usar `atualizar({...})` ou `limpar([...])`, nunca dois `definir` seguidos. O updater do `setSearchParams` vê os parâmetros da renderização anterior, e a segunda chamada desfaz a primeira.
+  - **Busca de texto:** `contem()` ignora maiúsculas e acentos.
+- **Lista vazia:** "Nenhum … cadastrado" (`EmptyState` com o botão Novo) é diferente de "Nenhum resultado para os filtros." (`SemResultado`, com Limpar filtros).
+- **Linha clicável:** `LinhaClicavel` abre o registro em edição. Botões e links da linha mantêm a própria ação. Para o teclado, cada linha mantém o link "Editar …".
+
+## Navegação e fluxo
+
+O usuário nunca deve se perder.
+
+- **Origem:** todo link para uma tela de cadastro leva a origem (`state={useOrigemAtual()}`; `BotaoNovo` e `LinhaClicavel` já levam). O Cancelar/Voltar retorna para lá (`useVoltarPara`), com filtros e dia selecionado. Sem origem (URL direta), volta para a listagem.
+- **Telas do mesmo fluxo se ligam nos dois sentidos.** Na manutenção:
+  - em Tarefas, a origem da tarefa ("Manutenção programada") abre a manutenção programada;
+  - a manutenção programada tem "Ver em Tarefas", que abre Tarefas no dia da próxima;
+  - Tarefas tem "Programar manutenção".
+  - Estados navegáveis ficam na URL (ex.: `/tarefas?dia=AAAA-MM-DD`).
+- **Ao criar um módulo novo:** definir de onde o usuário chega e para onde vai, e testar o caminho de ida e volta no E2E.
 
 ## Telas de cadastro e edição (obrigatório)
 
@@ -186,7 +257,7 @@ Toda tela de cadastro ou edição segue este comportamento:
   - **Ordem dos passos:** o `reset` roda num `useEffect` depois do envio, nunca dentro do `handleSubmit`, porque o RHF sobrescreve o estado ao concluir. A mensagem de sucesso sai só depois do `reset` (via `useEffectEvent`), para nunca existir "salvo" com alteração pendente. Referência: `features/checklists/components/checklist-form.tsx`.
   - **`<form data-alterado={isDirty}>`:** expõe o estado de alterações pendentes aos testes.
   - **Erro ao salvar:** a tela, os dados digitados e o estado de alterações pendentes são mantidos.
-- **Componentes:** `FormActions` (barra fixa com Cancelar, Salvar e o diálogo de descarte) e `ConfirmDialog`, ambos em `components/shared`.
+- **Componentes:** `CadastroForm` implementa tudo isso; `useAcoesCadastro` (`lib/cadastro.ts`) fornece as ações (salvar, troca para edição, mensagem de sucesso, erro). Registro que não pode ser editado (ex.: plano encerrado): `somenteLeitura`.
 - **Testes E2E de toda tela de cadastro:** salvar novo (vira edição e não duplica), salvar edição, Cancelar sem e com alterações, voltar no diálogo, Descartar e Cancelar depois de salvar.
 - **Sincronizar o teste depois de Salvar:**
   - aguardar a resposta da API (`page.waitForResponse`) e `data-alterado="false"`;
@@ -226,7 +297,8 @@ Frontend (`npm run test:e2e`, Playwright em `frontend/e2e`):
 
 Testes instáveis (flaky) são defeito, não azar. Regras:
 
-- **Nunca "corrigir" um teste intermitente com `.first()`, `.last()`, `waitForTimeout` ou aumento de timeout** sem entender a causa. Antes de aceitar um teste novo ou alterado, rodar a suíte pelo menos 3 vezes seguidas, ou usar `--repeat-each=10` no spec.
+- **Nunca "corrigir" um teste intermitente com `.first()`, `.last()`, `waitForTimeout` ou aumento de timeout** sem entender a causa.
+- **Quantas rodadas:** a suíte roda **uma vez** e o resultado é avaliado (inclusive os testes que passaram por motivo errado). Uma segunda rodada só quando a mudança tiver alto risco de regressão (ex.: renomeação ampla, mudança em componente compartilhado) ou houver falha suspeita de intermitência; neste caso, prefira repetir só o spec afetado (`--repeat-each`).
 - **Sincronizar pelo efeito da ação, não por sinais que podem ser antigos.** Exemplos de sinal antigo: um toast ainda na tela, um texto que já existia, a URL que não muda. Os efeitos válidos:
   - a resposta da API (`page.waitForResponse`);
   - um estado exposto pela tela (ex.: `data-alterado`);

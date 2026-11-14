@@ -1,9 +1,8 @@
 import { Building2Icon } from 'lucide-react'
 import { Navigate, useLocation, useNavigate } from 'react-router'
 import { LoginForm } from '@/features/auth/components/login-form'
-import { perfisDaRota } from '@/components/layout/navigation'
+import { podeAcessar } from '@/components/layout/navigation'
 import { useSessao } from '@/features/auth/hooks'
-import { temPerfil } from '@/features/auth/permissoes'
 import type { Perfil } from '@/features/auth/types'
 
 type LocationState = { from?: string } | null
@@ -14,7 +13,7 @@ export function LoginPage() {
   const destino = (useLocation().state as LocationState)?.from ?? '/'
 
   // Volta à rota de origem só se o perfil puder acessá-la.
-  const destinoPara = (perfil: Perfil) => (temPerfil(perfil, perfisDaRota(destino)) ? destino : '/')
+  const destinoPara = (perfil: Perfil) => (podeAcessar(perfil, destino) ? destino : '/')
 
   if (usuario) return <Navigate to={destinoPara(usuario.perfil)} replace />
 

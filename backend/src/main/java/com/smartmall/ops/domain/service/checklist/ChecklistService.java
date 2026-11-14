@@ -6,6 +6,7 @@ import com.smartmall.ops.domain.entity.Checklist;
 import com.smartmall.ops.domain.entity.ChecklistItem;
 import com.smartmall.ops.domain.entity.enums.TipoResposta;
 import com.smartmall.ops.domain.repository.checklist.ChecklistRepository;
+import com.smartmall.ops.domain.repository.manutencao.ManutencaoProgramadaRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,8 +19,20 @@ public class ChecklistService extends BaseService<Checklist> implements ICheckli
     public static final int MAX_ITENS = 50;
     public static final int MAX_CARACTERES_TEXTO = 500;
 
-    protected ChecklistService(final ChecklistRepository repository) {
+    private final ManutencaoProgramadaRepository programadaRepository;
+
+    protected ChecklistService(final ChecklistRepository repository, final ManutencaoProgramadaRepository programadaRepository) {
         super(repository);
+        this.programadaRepository = programadaRepository;
+    }
+
+    @Override
+    @Transactional
+    public void delete(String id) {
+        if (programadaRepository.existsByChecklistId(id)) {
+            throw new DomainException("Modelo de checklist usado em manutenção programada não pode ser excluído.");
+        }
+        super.delete(id);
     }
 
     @Override

@@ -1,6 +1,6 @@
 import { expect, type Locator, type Page } from '@playwright/test'
 
-export const LISTA_CHECKLISTS = '/manutencao/checklists'
+export const LISTA_MODELOS = '/planejamento/modelos-checklist'
 
 /** Nomes únicos: os testes rodam em paralelo contra o mesmo banco. */
 export function nomeUnico(prefixo = 'E2E') {
@@ -31,7 +31,7 @@ export async function preencherChecklist(page: Page, nome: string, itens: ItemDa
   }
 }
 
-const URL_EDICAO = new RegExp(`${LISTA_CHECKLISTS}/[0-9a-f-]{36}$`)
+const URL_EDICAO = new RegExp(`${LISTA_MODELOS}/[0-9a-f-]{36}$`)
 
 /** Salva e confere que a tela permanece aberta, em modo edição. Retorna o id do checklist. */
 export async function salvar(page: Page) {
@@ -41,10 +41,10 @@ export async function salvar(page: Page) {
   )
   await page.getByRole('button', { name: 'Salvar' }).click()
   expect((await resposta).ok()).toBe(true)
-  await expect(page.locator('form[aria-label="Checklist"]')).toHaveAttribute('data-alterado', 'false')
-  await expect(page.getByText('Checklist salvo.').last()).toBeVisible()
+  await expect(page.locator('form[aria-label="Modelo de checklist"]')).toHaveAttribute('data-alterado', 'false')
+  await expect(page.getByText('Modelo de checklist salvo.').last()).toBeVisible()
   await expect(page).toHaveURL(URL_EDICAO)
-  await expect(page.getByRole('heading', { level: 1, name: 'Editar checklist' })).toBeVisible()
+  await expect(page.getByRole('heading', { level: 1, name: 'Editar modelo de checklist' })).toBeVisible()
   return page.url().split('/').pop()!
 }
 
@@ -52,7 +52,7 @@ export async function salvar(page: Page) {
 export async function salvarEVoltar(page: Page) {
   await salvar(page)
   await page.getByRole('button', { name: 'Cancelar' }).click()
-  await expect(page).toHaveURL(new RegExp(`${LISTA_CHECKLISTS}$`))
+  await expect(page).toHaveURL(new RegExp(`${LISTA_MODELOS}$`))
 }
 
 export function dialogoDescarte(page: Page) {

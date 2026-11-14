@@ -48,6 +48,10 @@ Criadas pela seed do Liquibase (contexto `dev`). A tela de login tem atalhos par
 | Supervisor | `supervisor@smartmall.local` | `demo123` |
 | Funcionário | `funcionario@smartmall.local` | `demo123` |
 
+Também há funcionários para compor as equipes, todos com senha `demo123`: `pedro.lima@`, `luana.freitas@`, `elisa.rocha@` e `caio.nunes@smartmall.local`.
+
+A seed traz ainda 8 equipamentos, 4 equipes, 2 modelos de checklist e 2 manutenções programadas. A semanal do Elevador E1 começa no passado, então Tarefas já mostra tarefas atrasadas.
+
 ## Testes
 
 ```bash
