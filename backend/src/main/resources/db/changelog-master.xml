@@ -21,4 +21,6 @@
     <include file="db/changes/tarefa/20261116-1-execucao-tarefa.sql"/>
     <include file="db/changes/ausencia/20261117-1-cria-ausencia.sql"/>
     <include file="db/changes/ausencia/20261117-2-seed-ausencia.sql" context="dev"/>
+    <include file="db/changes/estoque/20261118-1-cria-estoque.sql"/>
+    <include file="db/changes/estoque/20261118-2-seed-estoque.sql" context="dev"/>
 </databaseChangeLog>

@@ -26,11 +26,13 @@ Manutenção programada (recorrência) ────────┘
 | **Manutenção programada** | Agendamento recorrente (ou único) que gera tarefas numa frequência | `ManutencaoProgramada`, `/api/manutencao-programada`, `/planejamento/manutencoes-programadas` | Implementado |
 | **Modelo de checklist** | Molde de verificação usado pelas tarefas; o checklist preenchido fica na tarefa | `Checklist` (nome técnico mantido), `/api/checklist`, `/planejamento/modelos-checklist` | Implementado |
 | **Disponibilidade** | Situação de hoje do funcionário, calculada: Indisponível (ausência vigente) > Ocupado (responsável por tarefa em execução) > Disponível. Presentes = disponíveis + ocupados | `/api/disponibilidade`, tela `/cadastros/equipes?visao=funcionarios` | Implementado |
+| **Item de estoque** | Peça, ferramenta, consumível ou EPI do almoxarifado. Não confundir com **Equipamento** (ativo monitorado). Saldo só muda por movimentação | `ItemEstoque`, `/api/estoque/item`, tela `/estoque` | Implementado |
+| **Movimentação** | Entrada (só gestão) ou retirada (todos) de um item, imutável: quem, quando, quanto, saldo depois e equipamento atendido. É a rastreabilidade do item; corrigir = movimentação contrária | `MovimentacaoEstoque`, `POST /api/estoque/item/{id}/entrada` e `/retirada`, `/api/estoque/movimentacao` | Implementado |
 | **Ausência** | Período (dias inteiros) em que o funcionário não está disponível. Motivo genérico, sem texto livre (LGPD: nada de dado de saúde) | `Ausencia`, `/api/ausencia` | Implementado |
 | **Chamado** | Registro de um problema (ocorrência), com triagem | — | A implementar |
 | **Plano de ação** | Conjunto de uma ou várias tarefas geradas por um chamado | — | A implementar |
 
-Não usar "plano" sozinho (ambíguo com Plano de ação) nem "agenda" como nome de módulo: a tela é Tarefas, e o calendário é só uma forma de vê-las. Status da tarefa: `AGENDADA → EM_EXECUCAO → EM_ANALISE → CONCLUIDA` (reprovada volta para `EM_EXECUCAO`); `CANCELADA` à parte. Menu: **Operação** (Central de Controle, Tarefas, Em análise), **Planejamento** (Manutenções programadas, Modelos de checklist), **Cadastros**, **Gestão** (Relatórios: `/relatorios`, `GET /api/relatorio/tarefas`, só dados agregados).
+Não usar "plano" sozinho (ambíguo com Plano de ação) nem "agenda" como nome de módulo: a tela é Tarefas, e o calendário é só uma forma de vê-las. Status da tarefa: `AGENDADA → EM_EXECUCAO → EM_ANALISE → CONCLUIDA` (reprovada volta para `EM_EXECUCAO`); `CANCELADA` à parte. Menu: **Operação** (Central de Controle, Tarefas, Em análise, Estoque), **Planejamento** (Manutenções programadas, Modelos de checklist), **Cadastros**, **Gestão** (Relatórios: `/relatorios`, `GET /api/relatorio/tarefas`, só dados agregados).
 
 ## Decisões de arquitetura
 

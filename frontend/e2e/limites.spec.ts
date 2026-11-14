@@ -32,6 +32,9 @@ test.describe('Todo campo tem limite', () => {
     '/cadastros/equipes',
     '/cadastros/equipes?visao=funcionarios',
     '/relatorios',
+    '/estoque/novo',
+    '/estoque',
+    '/estoque?visao=movimentacoes',
     '/planejamento/manutencoes-programadas',
     '/planejamento/modelos-checklist',
   ]) {
