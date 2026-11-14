@@ -56,6 +56,10 @@ public class SecurityConfiguration {
                         .requestMatchers("/api/usuario", "/api/usuario/**").hasAnyRole(GESTAO)
                         .requestMatchers("/api/manutencao-programada", "/api/manutencao-programada/**").hasAnyRole(GESTAO)
                         .requestMatchers(HttpMethod.POST, "/api/tarefa/*/cancelar", "/api/tarefa/*/restaurar").hasAnyRole(GESTAO)
+                        .requestMatchers(HttpMethod.GET, "/api/tarefa/em-analise").hasAnyRole(GESTAO)
+                        .requestMatchers(HttpMethod.POST, "/api/tarefa/*/aprovar", "/api/tarefa/*/reprovar").hasAnyRole(GESTAO)
+                        // Limpeza de dados E2E (LimpezaE2EController, só no perfil dev).
+                        .requestMatchers("/api/teste/**").hasRole("ADMINISTRADOR")
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().permitAll())
                 .exceptionHandling(ex -> ex

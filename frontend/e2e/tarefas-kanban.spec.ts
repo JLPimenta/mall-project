@@ -2,6 +2,9 @@ import { expect, test, type Page } from '@playwright/test'
 import { contas, entrar } from './support/auth'
 import { escolher } from './support/cadastros'
 import { criarProgramadaViaApi, diaIso, excluirProgramadasMarcadas, horarioUnico, marcaUnica } from './support/programadas'
+import { apiComo, criarTarefaDoJoao, descartarProgramada, enviarParaAnaliseViaApi } from './support/tarefas'
+
+const COLUNAS = ['Atrasada', 'Agendada', 'Em execução', 'Em análise', 'Concluída', 'Cancelada']
 
 const TAREFAS = '/tarefas'
 const KANBAN = `${TAREFAS}?visao=kanban`
@@ -43,7 +46,7 @@ test.describe('Tarefas: Kanban (Supervisor)', () => {
     await expect(page).toHaveURL(/visao=kanban/)
     await expect(botaoVisao(page, 'Kanban')).toHaveAttribute('aria-pressed', 'true')
     await expect(calendario(page)).toHaveCount(0)
-    for (const rotulo of ['Atrasada', 'Agendada', 'Cancelada']) await expect(tituloColuna(page, rotulo)).toBeVisible()
+    for (const rotulo of COLUNAS) await expect(tituloColuna(page, rotulo)).toBeAttached()
     // Parte de cima intacta: título, ação primária, indicadores e filtros.
     await expect(page.getByRole('heading', { level: 1, name: 'Tarefas' })).toBeVisible()
     await expect(page.getByRole('link', { name: 'Programar manutenção' })).toBeVisible()
@@ -56,19 +59,22 @@ test.describe('Tarefas: Kanban (Supervisor)', () => {
     await expect(calendario(page)).toBeVisible()
   })
 
-  test('estrutura HTML5: um h1, um main e uma coluna por situação', async ({ page }) => {
+  test('estrutura HTML5: um h1, um main e uma coluna por situação do fluxo', async ({ page }) => {
     await page.goto(KANBAN)
     await expect(tituloColuna(page, 'Atrasada')).toBeVisible()
 
     await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1)
     await expect(page.getByRole('main')).toHaveCount(1)
-    await expect(page.getByRole('heading', { level: 3 })).toHaveCount(3)
+    await expect(page.getByRole('heading', { level: 3 })).toHaveCount(COLUNAS.length)
+    await expect(page.getByRole('region', { name: 'Quadro Kanban' })).toBeVisible()
+    // O quadro rola dentro de si; a página não ganha rolagem horizontal (no celular, o diálogo sairia da tela).
+    await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0)
   })
 
   test('cada coluna mostra as tarefas do mês daquela situação', async ({ page }) => {
     const doMes = await tarefasDoMes(page)
-    const atrasadas = doMes.filter((t) => t.status !== 'CANCELADA' && t.atrasada)
-    const agendadas = doMes.filter((t) => t.status !== 'CANCELADA' && !t.atrasada)
+    const atrasadas = doMes.filter((t) => t.status === 'AGENDADA' && t.atrasada)
+    const agendadas = doMes.filter((t) => t.status === 'AGENDADA' && !t.atrasada)
 
     await page.goto(KANBAN)
 
@@ -87,6 +93,7 @@ test.describe('Tarefas: Kanban (Supervisor)', () => {
     await expect(tituloColuna(page, 'Atrasada')).toBeVisible()
     await expect(tituloColuna(page, 'Agendada')).toHaveCount(0)
     await expect(tituloColuna(page, 'Cancelada')).toHaveCount(0)
+    await expect(page.getByRole('heading', { level: 3 })).toHaveCount(1)
 
     await botaoVisao(page, 'Calendário').click()
     await expect(page.getByLabel('Situação', { exact: true })).toHaveText('Atrasada')
@@ -116,6 +123,29 @@ test.describe('Tarefas: Kanban (Supervisor)', () => {
       await expect(cartao('Cancelada')).toHaveCount(0)
     } finally {
       await excluirProgramadasMarcadas(page, [marca])
+    }
+  })
+
+  test('tarefa enviada para análise fica em "Em análise" com o responsável, e o cartão abre a tarefa', async ({ page, baseURL }) => {
+    const admin = await apiComo(baseURL!, contas.administrador)
+    const joao = await apiComo(baseURL!, contas.funcionario)
+    const criada = await criarTarefaDoJoao(admin)
+    try {
+      await enviarParaAnaliseViaApi(joao, criada.tarefaId)
+
+      await page.goto(`${TAREFAS}?visao=kanban&dia=${criada.dia}`)
+      // Pelo id: outros testes também criam tarefas da Bomba B01 nesse período.
+      const daTarefa = page.locator(`a[href="/tarefas/${criada.tarefaId}"]`)
+      const cartao = coluna(page, 'Em análise').getByRole('listitem').filter({ has: daTarefa })
+      await expect(cartao).toHaveCount(1)
+      await expect(cartao).toContainText('Responsável: João Costa')
+      await expect(coluna(page, 'Agendada').getByRole('listitem').filter({ has: daTarefa })).toHaveCount(0)
+
+      await cartao.getByRole('link', { name: new RegExp(`^Abrir tarefa de ${criada.titulo}`) }).click()
+      await expect(page).toHaveURL(new RegExp(`/tarefas/${criada.tarefaId}$`))
+    } finally {
+      await descartarProgramada(admin, criada)
+      await Promise.all([admin.dispose(), joao.dispose()])
     }
   })
 

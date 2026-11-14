@@ -2,7 +2,8 @@ import { useEffect, useRef, type KeyboardEvent } from 'react'
 import { formatar, gradeDoMes, mesmoDia, paraIsoData, somarDias } from '@/lib/datas'
 import { useAgora } from '@/lib/use-agora'
 import { cn } from '@/lib/utils'
-import { situacaoDe, type Tarefa } from '../types'
+import { marcadorDoTom, pontoDoTom } from '@/lib/tons'
+import { situacaoDe, situacaoInfo, type Tarefa } from '../types'
 
 type CalendarioMesProps = {
   mes: Date
@@ -60,7 +61,6 @@ export function CalendarioMes({ mes, selecionado, tarefas, onSelecionar }: Calen
             {dias.slice(semana * 7, semana * 7 + 7).map((dia) => {
               const itens = porDia.get(paraIsoData(dia)) ?? []
               const atrasadas = itens.filter((m) => situacaoDe(m) === 'ATRASADA').length
-              const ativas = itens.filter((m) => m.status !== 'CANCELADA')
               const doMes = dia.getMonth() === mes.getMonth()
               const ehSelecionado = mesmoDia(dia, selecionado)
               const ehHoje = mesmoDia(dia, hoje)
@@ -98,7 +98,9 @@ export function CalendarioMes({ mes, selecionado, tarefas, onSelecionar }: Calen
                     {/* Celular: só marcadores. Desktop: código e hora das primeiras tarefas. */}
                     {itens.length > 0 && (
                       <span className="flex gap-1 sm:hidden" aria-hidden>
-                        <span className={cn('size-1.5 rounded-full', atrasadas > 0 ? 'bg-destructive' : ativas.length > 0 ? 'bg-primary' : 'bg-muted-foreground')} />
+                        {[...new Set(itens.map((m) => situacaoInfo[situacaoDe(m)].tom))].slice(0, 3).map((tom) => (
+                          <span key={tom} className={cn('size-1.5 rounded-full', pontoDoTom[tom])} />
+                        ))}
                         {itens.length > 1 && <span className="text-[10px] leading-none text-muted-foreground">{itens.length}</span>}
                       </span>
                     )}
@@ -107,10 +109,9 @@ export function CalendarioMes({ mes, selecionado, tarefas, onSelecionar }: Calen
                         <span
                           key={m.id}
                           className={cn(
-                            'truncate rounded px-1 text-[11px] leading-4',
-                            situacaoDe(m) === 'ATRASADA' && 'bg-destructive/10 text-destructive',
-                            situacaoDe(m) === 'AGENDADA' && 'bg-primary/10 text-primary',
-                            situacaoDe(m) === 'CANCELADA' && 'text-muted-foreground line-through',
+                            'truncate rounded-r border-l-2 px-1 text-[11px] leading-4',
+                            marcadorDoTom[situacaoInfo[situacaoDe(m)].tom],
+                            m.status === 'CANCELADA' && 'line-through',
                           )}
                         >
                           {formatar.hora(m.dataHoraPrevista)} {m.equipamento.codigo}

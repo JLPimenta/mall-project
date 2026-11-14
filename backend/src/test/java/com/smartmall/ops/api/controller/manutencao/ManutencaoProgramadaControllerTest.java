@@ -2,7 +2,10 @@ package com.smartmall.ops.api.controller.manutencao;
 
 import com.smartmall.ops.api.config.security.PasswordConfiguration;
 import com.smartmall.ops.api.config.security.SecurityConfiguration;
+import com.smartmall.ops.api.config.security.UsuarioAutenticado;
 import com.smartmall.ops.api.config.web.WebConfiguration;
+import com.smartmall.ops.domain.entity.Usuario;
+import com.smartmall.ops.domain.entity.enums.Perfil;
 import com.smartmall.ops.domain.entity.Checklist;
 import com.smartmall.ops.domain.entity.Equipamento;
 import com.smartmall.ops.domain.entity.Equipe;
@@ -34,6 +37,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -129,13 +133,14 @@ class ManutencaoProgramadaControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMINISTRADOR")
-    void encerra() throws Exception {
+    void encerraRegistrandoQuemEncerrou() throws Exception {
         var encerrado = programada();
         encerrado.setAtivo(false);
-        when(service.encerrar("programada-1")).thenReturn(encerrado);
+        when(service.encerrar("programada-1", "u-admin")).thenReturn(encerrado);
+        var admin = new Usuario("Admin", "a@smartmall.local", "h", Perfil.ADMINISTRADOR, true);
+        admin.setId("u-admin");
 
-        mvc.perform(post("/api/manutencao-programada/programada-1/encerrar"))
+        mvc.perform(post("/api/manutencao-programada/programada-1/encerrar").with(user(new UsuarioAutenticado(admin))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.ativo").value(false));
     }

@@ -10,6 +10,7 @@ import { temPerfil } from '@/features/auth/permissoes'
 import { useEquipes } from '@/features/equipes/hooks'
 import { CalendarioMes } from '@/features/tarefas/components/calendario-mes'
 import { DiaPainel } from '@/features/tarefas/components/dia-painel'
+import { LegendaSituacoes } from '@/features/tarefas/components/legenda-situacoes'
 import { IndicadoresTarefas } from '@/features/tarefas/components/indicadores-tarefas'
 import { KanbanTarefas } from '@/features/tarefas/components/kanban-tarefas'
 import { VisaoTarefas, type Visao } from '@/features/tarefas/components/visao-tarefas'
@@ -120,7 +121,10 @@ export function TarefasPage() {
           {consulta.isPending ? (
             <Skeleton className="h-96 w-full" />
           ) : (
-            <CalendarioMes mes={mes} selecionado={selecionado} tarefas={tarefas} onSelecionar={selecionar} />
+            <div className="grid gap-2">
+              <CalendarioMes mes={mes} selecionado={selecionado} tarefas={tarefas} onSelecionar={selecionar} />
+              <LegendaSituacoes />
+            </div>
           )}
           <DiaPainel dia={selecionado} tarefas={doDia} podeGerenciar={gestao} />
         </div>

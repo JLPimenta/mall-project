@@ -16,4 +16,7 @@ public interface ManutencaoProgramadaRepository extends BaseRepository<Manutenca
     boolean existsByChecklistId(String checklistId);
 
     List<ManutencaoProgramada> findByAtivoTrue();
+
+    /** Limpeza de dados de teste E2E (marca nas observações). */
+    List<ManutencaoProgramada> findByObservacoes(String observacoes);
 }

@@ -1,5 +1,5 @@
 import { Loader2Icon } from 'lucide-react'
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from './confirm-dialog'
 
@@ -10,6 +10,8 @@ type FormActionsProps = {
   onCancel: () => void
   /** Registro que não pode ser editado: só "Voltar". */
   somenteLeitura?: boolean
+  /** Ação principal além de Salvar (ex.: "Enviar para análise"); Salvar passa a ser secundário. */
+  extra?: ReactNode
 }
 
 /**
@@ -17,7 +19,7 @@ type FormActionsProps = {
  * Cancelar com alterações pendentes pede confirmação antes de descartar.
  * As margens negativas compensam o padding do <main>.
  */
-export function FormActions({ alterado, salvando, onCancel, somenteLeitura }: FormActionsProps) {
+export function FormActions({ alterado, salvando, onCancel, somenteLeitura, extra }: FormActionsProps) {
   const [confirmando, setConfirmando] = useState(false)
 
   return (
@@ -26,11 +28,12 @@ export function FormActions({ alterado, salvando, onCancel, somenteLeitura }: Fo
         {somenteLeitura ? 'Voltar' : 'Cancelar'}
       </Button>
       {!somenteLeitura && (
-        <Button type="submit" disabled={salvando}>
+        <Button type="submit" variant={extra ? 'outline' : 'default'} disabled={salvando}>
           {salvando && <Loader2Icon className="animate-spin" aria-hidden />}
           Salvar
         </Button>
       )}
+      {!somenteLeitura && extra}
 
       <ConfirmDialog
         open={confirmando}

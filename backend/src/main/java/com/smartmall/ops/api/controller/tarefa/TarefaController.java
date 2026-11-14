@@ -47,14 +47,14 @@ public class TarefaController {
 
     @PostMapping("/{id}/cancelar")
     @Operation(description = "Cancela uma data específica.")
-    public TarefaResponse cancelar(@PathVariable String id) {
-        return service.cancelar(id);
+    public TarefaResponse cancelar(@PathVariable String id, @AuthenticationPrincipal UsuarioAutenticado usuario) {
+        return service.cancelar(id, usuario.getId());
     }
 
     @PostMapping("/{id}/restaurar")
     @Operation(description = "Desfaz o cancelamento de uma data futura.")
-    public TarefaResponse restaurar(@PathVariable String id) {
-        return service.restaurar(id);
+    public TarefaResponse restaurar(@PathVariable String id, @AuthenticationPrincipal UsuarioAutenticado usuario) {
+        return service.restaurar(id, usuario.getId());
     }
 
     /** Funcionário vê só as tarefas das equipes de que é membro. */

@@ -19,6 +19,8 @@ type CadastroFormProps<T extends FieldValues> = {
   className?: string
   /** Desabilita os campos e troca as ações por "Voltar". */
   somenteLeitura?: boolean
+  /** Ação principal além de Salvar, na barra fixa (FormActions). */
+  acaoExtra?: ReactNode
   children: ReactNode
 }
 
@@ -38,6 +40,7 @@ export function CadastroForm<T extends FieldValues>({
   onCancel,
   className,
   somenteLeitura,
+  acaoExtra,
   children,
 }: CadastroFormProps<T>) {
   const [salvos, setSalvos] = useState<T>()
@@ -69,7 +72,7 @@ export function CadastroForm<T extends FieldValues>({
         <fieldset disabled={somenteLeitura} className="contents">
           {children}
         </fieldset>
-        <FormActions alterado={form.formState.isDirty} salvando={salvando} onCancel={onCancel} somenteLeitura={somenteLeitura} />
+        <FormActions alterado={form.formState.isDirty} salvando={salvando} onCancel={onCancel} somenteLeitura={somenteLeitura} extra={acaoExtra} />
       </form>
     </FormProvider>
   )

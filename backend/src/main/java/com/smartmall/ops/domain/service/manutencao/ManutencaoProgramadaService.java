@@ -4,12 +4,14 @@ import com.smartmall.ops.domain.core.exception.DomainException;
 import com.smartmall.ops.domain.core.service.BaseService;
 import com.smartmall.ops.domain.entity.Tarefa;
 import com.smartmall.ops.domain.entity.ManutencaoProgramada;
+import com.smartmall.ops.domain.entity.enums.AcaoTarefa;
 import com.smartmall.ops.domain.entity.enums.Frequencia;
 import com.smartmall.ops.domain.entity.enums.StatusTarefa;
 import com.smartmall.ops.domain.repository.checklist.ChecklistRepository;
 import com.smartmall.ops.domain.repository.equipamento.EquipamentoRepository;
 import com.smartmall.ops.domain.repository.equipe.EquipeRepository;
 import com.smartmall.ops.domain.repository.tarefa.TarefaRepository;
+import com.smartmall.ops.domain.repository.usuario.UsuarioRepository;
 import com.smartmall.ops.domain.repository.manutencao.ManutencaoProgramadaRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
@@ -37,6 +39,7 @@ public class ManutencaoProgramadaService extends BaseService<ManutencaoProgramad
     private final ChecklistRepository checklistRepository;
     private final EquipeRepository equipeRepository;
     private final TarefaRepository tarefaRepository;
+    private final UsuarioRepository usuarioRepository;
     private final Clock clock;
 
     protected ManutencaoProgramadaService(final ManutencaoProgramadaRepository repository,
@@ -44,12 +47,14 @@ public class ManutencaoProgramadaService extends BaseService<ManutencaoProgramad
                                      final ChecklistRepository checklistRepository,
                                      final EquipeRepository equipeRepository,
                                      final TarefaRepository tarefaRepository,
+                                     final UsuarioRepository usuarioRepository,
                                      final Clock clock) {
         super(repository);
         this.equipamentoRepository = equipamentoRepository;
         this.checklistRepository = checklistRepository;
         this.equipeRepository = equipeRepository;
         this.tarefaRepository = tarefaRepository;
+        this.usuarioRepository = usuarioRepository;
         this.clock = clock;
     }
 
@@ -116,12 +121,16 @@ public class ManutencaoProgramadaService extends BaseService<ManutencaoProgramad
 
     @Override
     @Transactional
-    public ManutencaoProgramada encerrar(String id) {
+    public ManutencaoProgramada encerrar(String id, String usuarioId) {
         var programada = findById(id);
         if (!Boolean.TRUE.equals(programada.getAtivo())) return programada;
         programada.setAtivo(Boolean.FALSE);
-        for (Tarefa m : tarefaRepository.findByProgramadaIdAndDataHoraPrevistaGreaterThanEqual(id, agora())) {
-            if (m.getStatus() == StatusTarefa.AGENDADA) m.setStatus(StatusTarefa.CANCELADA);
+        var agora = agora();
+        var usuario = usuarioRepository.getReferenceById(usuarioId);
+        for (Tarefa m : tarefaRepository.findByProgramadaIdAndDataHoraPrevistaGreaterThanEqual(id, agora)) {
+            if (m.getStatus() == StatusTarefa.AGENDADA) {
+                m.mudarStatus(StatusTarefa.CANCELADA, AcaoTarefa.CANCELADA, usuario, agora, "Manutenção programada encerrada.");
+            }
         }
         return getRepository().save(programada);
     }

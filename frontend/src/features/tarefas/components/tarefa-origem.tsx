@@ -15,7 +15,7 @@ export function TarefaOrigem({ tarefa: t, podeGerenciar }: { tarefa: Tarefa; pod
     <Link
       to={`/planejamento/manutencoes-programadas/${t.manutencaoProgramadaId}`}
       state={origem}
-      className="text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+      className="relative z-10 text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
       aria-label={`Abrir a manutenção programada de ${t.equipamento.codigo} · ${t.equipamento.nome}`}
     >
       {origemLabel[t.origem]}

@@ -7,10 +7,14 @@ import com.smartmall.ops.domain.entity.Equipe;
 import com.smartmall.ops.domain.entity.Tarefa;
 import com.smartmall.ops.domain.entity.Piso;
 import com.smartmall.ops.domain.entity.ManutencaoProgramada;
+import com.smartmall.ops.domain.entity.Usuario;
+import com.smartmall.ops.domain.entity.enums.AcaoTarefa;
+import com.smartmall.ops.domain.entity.enums.Perfil;
 import com.smartmall.ops.domain.entity.enums.StatusTarefa;
 import com.smartmall.ops.domain.model.tarefa.FiltroTarefas;
 import com.smartmall.ops.domain.model.tarefa.TarefaResponse;
 import com.smartmall.ops.domain.repository.tarefa.TarefaRepository;
+import com.smartmall.ops.domain.repository.usuario.UsuarioRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -42,12 +46,15 @@ class TarefaServiceTest {
     @Mock
     private TarefaRepository repository;
 
+    @Mock
+    private UsuarioRepository usuarioRepository;
+
     private TarefaService service;
     private ManutencaoProgramada programada;
 
     @BeforeEach
     void setUp() {
-        service = new TarefaService(repository, Clock.fixed(AGORA.atZone(FUSO).toInstant(), FUSO));
+        service = new TarefaService(repository, usuarioRepository, Clock.fixed(AGORA.atZone(FUSO).toInstant(), FUSO));
         var piso = new Piso("L1", "Piso L1", 1);
         var equipamento = new Equipamento("ELV-E1", "Elevador E1", null, piso, "Praça Central", null);
         equipamento.setId("eq");
@@ -157,17 +164,26 @@ class TarefaServiceTest {
     }
 
     @Test
-    void cancelaAgendada() {
-        when(repository.findById("x")).thenReturn(Optional.of(m("x", AGORA.plusDays(1), StatusTarefa.AGENDADA)));
+    void cancelaAgendadaRegistrandoNoHistorico() {
 
-        assertThat(service.cancelar("x").getStatus()).isEqualTo(StatusTarefa.CANCELADA);
+        var tarefa = m("x", AGORA.plusDays(1), StatusTarefa.AGENDADA);
+        when(repository.findById("x")).thenReturn(Optional.of(tarefa));
+        var usuario = new Usuario("Sup", "s@smartmall.local", "h", Perfil.SUPERVISOR, true);
+        when(usuarioRepository.getReferenceById("u1")).thenReturn(usuario);
+
+        assertThat(service.cancelar("x", "u1").getStatus()).isEqualTo(StatusTarefa.CANCELADA);
+        assertThat(tarefa.getHistorico()).singleElement().satisfies(h -> {
+            assertThat(h.getAcao()).isEqualTo(AcaoTarefa.CANCELADA);
+            assertThat(h.getUsuario()).isSameAs(usuario);
+            assertThat(h.getDataHora()).isEqualTo(AGORA);
+        });
     }
 
     @Test
     void naoCancelaOQueJaFoiCancelado() {
         when(repository.findById("x")).thenReturn(Optional.of(m("x", AGORA.plusDays(1), StatusTarefa.CANCELADA)));
 
-        assertThatThrownBy(() -> service.cancelar("x"))
+        assertThatThrownBy(() -> service.cancelar("x", "u1"))
                 .isInstanceOf(DomainException.class)
                 .hasMessage("Só tarefas agendadas podem ser canceladas.");
     }
@@ -176,14 +192,14 @@ class TarefaServiceTest {
     void restauraCanceladaFutura() {
         when(repository.findById("x")).thenReturn(Optional.of(m("x", AGORA.plusDays(1), StatusTarefa.CANCELADA)));
 
-        assertThat(service.restaurar("x").getStatus()).isEqualTo(StatusTarefa.AGENDADA);
+        assertThat(service.restaurar("x", "u1").getStatus()).isEqualTo(StatusTarefa.AGENDADA);
     }
 
     @Test
     void naoRestauraCanceladaPassada() {
         when(repository.findById("x")).thenReturn(Optional.of(m("x", AGORA.minusDays(1), StatusTarefa.CANCELADA)));
 
-        assertThatThrownBy(() -> service.restaurar("x"))
+        assertThatThrownBy(() -> service.restaurar("x", "u1"))
                 .isInstanceOf(DomainException.class)
                 .hasMessage("Não é possível restaurar uma tarefa com data passada.");
     }
@@ -193,7 +209,7 @@ class TarefaServiceTest {
         programada.setAtivo(false);
         when(repository.findById("x")).thenReturn(Optional.of(m("x", AGORA.plusDays(1), StatusTarefa.CANCELADA)));
 
-        assertThatThrownBy(() -> service.restaurar("x"))
+        assertThatThrownBy(() -> service.restaurar("x", "u1"))
                 .isInstanceOf(DomainException.class)
                 .hasMessage("A manutenção programada desta tarefa está encerrada.");
     }

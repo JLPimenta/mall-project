@@ -34,6 +34,10 @@ public class TarefaResponse {
     private String localizacao;
     private Resumo checklist;
     private Resumo equipe;
+    /** Membro da equipe que assumiu a tarefa. */
+    private Resumo responsavel;
+    private Integer envios;
+    private LocalDateTime ultimoEnvio;
 
     public static TarefaResponse de(Tarefa tarefa, LocalDateTime agora) {
         var programada = tarefa.getProgramada();
@@ -52,6 +56,9 @@ public class TarefaResponse {
                 .localizacao(equipamento.getLocalizacao())
                 .checklist(new Resumo(programada.getChecklist().getId(), programada.getChecklist().getNome(), null))
                 .equipe(new Resumo(programada.getEquipe().getId(), programada.getEquipe().getNome(), null))
+                .responsavel(TarefaDetalheResponse.resumo(tarefa.getResponsavel()))
+                .envios(tarefa.getEnvios())
+                .ultimoEnvio(tarefa.getUltimoEnvio())
                 .build();
     }
 }

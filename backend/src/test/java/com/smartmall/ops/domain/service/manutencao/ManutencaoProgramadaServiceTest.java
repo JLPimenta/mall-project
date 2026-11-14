@@ -12,6 +12,7 @@ import com.smartmall.ops.domain.repository.checklist.ChecklistRepository;
 import com.smartmall.ops.domain.repository.equipamento.EquipamentoRepository;
 import com.smartmall.ops.domain.repository.equipe.EquipeRepository;
 import com.smartmall.ops.domain.repository.tarefa.TarefaRepository;
+import com.smartmall.ops.domain.repository.usuario.UsuarioRepository;
 import com.smartmall.ops.domain.repository.manutencao.ManutencaoProgramadaRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -53,6 +54,7 @@ class ManutencaoProgramadaServiceTest {
     @Mock private ChecklistRepository checklistRepository;
     @Mock private EquipeRepository equipeRepository;
     @Mock private TarefaRepository tarefaRepository;
+    @Mock private UsuarioRepository usuarioRepository;
 
     private ManutencaoProgramadaService service;
     private final List<Tarefa> salvas = new ArrayList<>();
@@ -60,7 +62,7 @@ class ManutencaoProgramadaServiceTest {
     @BeforeEach
     void setUp() {
         var clock = Clock.fixed(AGORA.atZone(FUSO).toInstant(), FUSO);
-        service = new ManutencaoProgramadaService(repository, equipamentoRepository, checklistRepository, equipeRepository, tarefaRepository, clock);
+        service = new ManutencaoProgramadaService(repository, equipamentoRepository, checklistRepository, equipeRepository, tarefaRepository, usuarioRepository, clock);
         lenient().when(repository.save(any())).thenAnswer(inv -> {
             ManutencaoProgramada p = inv.getArgument(0);
             if (p.getId() == null) p.setId("programada-1");
@@ -242,7 +244,7 @@ class ManutencaoProgramadaServiceTest {
         var cancelada = tarefa(p, LocalDateTime.of(2026, 11, 23, 8, 0), StatusTarefa.CANCELADA);
         when(tarefaRepository.findByProgramadaIdAndDataHoraPrevistaGreaterThanEqual("programada-1", AGORA)).thenReturn(List.of(agendada, cancelada));
 
-        var encerrado = service.encerrar("programada-1");
+        var encerrado = service.encerrar("programada-1", "u1");
 
         assertThat(encerrado.getAtivo()).isFalse();
         assertThat(agendada.getStatus()).isEqualTo(StatusTarefa.CANCELADA);

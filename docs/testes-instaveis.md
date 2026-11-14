@@ -11,9 +11,11 @@ Registro de testes que passaram e falharam sem mudança de código, com causa e 
 
 | 5 | `listagens.spec.ts` › filtra por código, nome… | A linha "CFTV-L2" às vezes não aparecia | Texto de busca errado no teste ("camaras"). O teste passava porque conferia a linha logo após "Limpar filtros", quando a lista inteira ainda estava visível (sinal antigo) | Teste | Corrigido: busca certa e conferência da quantidade de linhas, que só bate depois do filtro aplicado |
 | 6 | Agenda › "Limpar filtros" (descoberto ao investigar o caso 5) | Um dos dois filtros voltava depois de limpar | Defeito real: o `setSearchParams(fn)` entrega à `fn` os parâmetros da última renderização. Duas atualizações seguidas faziam a segunda desfazer a primeira | Código | Corrigido em `lib/filtros.ts` (parte de `window.location` e aplica várias mudanças de uma vez), com teste próprio |
+| 7 | `tarefa-execucao.spec.ts` › assume pela tela Tarefas… | Strict mode: o link "Abrir tarefa de BOM-B01…" encontrou 2 ou 3 elementos | Na suíte completa, outros testes do mesmo spec criaram tarefas do mesmo equipamento no mesmo dia (data sorteada num intervalo de 15 dias) | Teste | Corrigido: o link é localizado também pelo `href` com o id da tarefa criada no teste |
 
 ## Riscos ainda presentes
 
 - **Toasts como confirmação:** `Checklist excluído.` e o toast após `salvar()` são aceitáveis só porque há outra sincronização antes (resposta da API ou remoção da linha).
 - **Contagem de itens da seed** (`5` e `4` em "mostra os checklists da seed"): quebra se algum teste salvar alterações num checklist da seed. Hoje os testes que abrem a seed só cancelam.
+- **Sobras fora do perfil dev:** a limpeza de tarefas executadas usa `DELETE /api/teste/e2e`, que só existe no perfil `dev`. Contra a stack em containers (perfil `docker`), o helper encerra a manutenção programada e ela fica na listagem como "Encerrada" (observação `E2E-…`).
 - **Arrastar com o mouse** (`page.mouse` com `steps`): estável nas execuções feitas, mas depende de tempo de animação. Se oscilar, o caminho pelo teclado já cobre a funcionalidade.

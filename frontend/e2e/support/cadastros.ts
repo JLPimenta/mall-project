@@ -13,6 +13,7 @@ export const SEED = {
   checklistElevador: '7c3a9e20-0001-4b1d-9c00-000000000001',
   equipeHidraulica: '3e9a0000-0001-4d00-8000-000000000002',
   equipeClimatizacao: '3e9a0000-0001-4d00-8000-000000000001',
+  equipeElevadores: '3e9a0000-0001-4d00-8000-000000000003',
   programadaElevadorSemanal: '4c2b0000-0001-4f00-a000-000000000001',
 } as const
 

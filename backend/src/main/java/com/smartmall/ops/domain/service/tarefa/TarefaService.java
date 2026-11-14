@@ -2,7 +2,9 @@ package com.smartmall.ops.domain.service.tarefa;
 
 import com.smartmall.ops.domain.core.exception.DomainException;
 import com.smartmall.ops.domain.entity.Tarefa;
+import com.smartmall.ops.domain.entity.enums.AcaoTarefa;
 import com.smartmall.ops.domain.entity.enums.StatusTarefa;
+import com.smartmall.ops.domain.repository.usuario.UsuarioRepository;
 import com.smartmall.ops.domain.model.tarefa.FiltroTarefas;
 import com.smartmall.ops.domain.model.tarefa.TarefaResponse;
 import com.smartmall.ops.domain.model.tarefa.ResumoTarefasResponse;
@@ -25,10 +27,12 @@ public class TarefaService implements ITarefaService {
     public static final int MAX_DIAS_CONSULTA = 93;
 
     private final TarefaRepository repository;
+    private final UsuarioRepository usuarioRepository;
     private final Clock clock;
 
-    public TarefaService(TarefaRepository repository, Clock clock) {
+    public TarefaService(TarefaRepository repository, UsuarioRepository usuarioRepository, Clock clock) {
         this.repository = repository;
+        this.usuarioRepository = usuarioRepository;
         this.clock = clock;
     }
 
@@ -53,6 +57,9 @@ public class TarefaService implements ITarefaService {
         return switch (situacao) {
             case ATRASADA -> m.isAtrasada(agora);
             case AGENDADA -> m.getStatus() == StatusTarefa.AGENDADA && !m.isAtrasada(agora);
+            case EM_EXECUCAO -> m.getStatus() == StatusTarefa.EM_EXECUCAO;
+            case EM_ANALISE -> m.getStatus() == StatusTarefa.EM_ANALISE;
+            case CONCLUIDA -> m.getStatus() == StatusTarefa.CONCLUIDA;
             case CANCELADA -> m.getStatus() == StatusTarefa.CANCELADA;
         };
     }
@@ -80,18 +87,19 @@ public class TarefaService implements ITarefaService {
 
     @Override
     @Transactional
-    public TarefaResponse cancelar(String id) {
+    public TarefaResponse cancelar(String id, String usuarioId) {
         var m = buscar(id);
+        var agora = LocalDateTime.now(clock);
         if (m.getStatus() != StatusTarefa.AGENDADA) {
             throw new DomainException("Só tarefas agendadas podem ser canceladas.");
         }
-        m.setStatus(StatusTarefa.CANCELADA);
-        return TarefaResponse.de(repository.save(m), LocalDateTime.now(clock));
+        m.mudarStatus(StatusTarefa.CANCELADA, AcaoTarefa.CANCELADA, usuarioRepository.getReferenceById(usuarioId), agora, null);
+        return TarefaResponse.de(repository.save(m), agora);
     }
 
     @Override
     @Transactional
-    public TarefaResponse restaurar(String id) {
+    public TarefaResponse restaurar(String id, String usuarioId) {
         var m = buscar(id);
         var agora = LocalDateTime.now(clock);
         if (m.getStatus() != StatusTarefa.CANCELADA) {
@@ -103,11 +111,15 @@ public class TarefaService implements ITarefaService {
         if (!Boolean.TRUE.equals(m.getProgramada().getAtivo())) {
             throw new DomainException("A manutenção programada desta tarefa está encerrada.");
         }
-        m.setStatus(StatusTarefa.AGENDADA);
+        m.mudarStatus(StatusTarefa.AGENDADA, AcaoTarefa.RESTAURADA, usuarioRepository.getReferenceById(usuarioId), agora, null);
         return TarefaResponse.de(repository.save(m), agora);
     }
 
     private Tarefa buscar(String id) {
-        return repository.findById(id).orElseThrow(() -> new EntityNotFoundException("Tarefa não encontrada."));
+        return repository.findById(id).orElseThrow(TarefaService::naoEncontrada);
+    }
+
+    static EntityNotFoundException naoEncontrada() {
+        return new EntityNotFoundException("Tarefa não encontrada.");
     }
 }

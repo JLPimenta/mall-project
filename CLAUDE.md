@@ -19,13 +19,16 @@ Manutenção programada (recorrência) ────────┘
 | Termo | O que é | No código | Situação |
 |---|---|---|---|
 | **Tarefa** | Unidade de trabalho com data, equipe, equipamento, status e, no futuro, prazo (SLA). É onde os dois fluxos chegam. | `Tarefa`, `/api/tarefa`, tela `/tarefas` | Implementado (gerada por manutenção programada) |
+| **Responsável** | Membro da equipe que assumiu a tarefa. Continua o mesmo depois de uma reprovação | `Tarefa.responsavel`, `POST /api/tarefa/{id}/assumir` | Implementado |
+| **Execução** | Checklist preenchido (cópia do modelo feita ao assumir), observação e evidências (imagens) | `TarefaItem`, `TarefaEvidencia`, tela `/tarefas/{id}` | Implementado |
+| **Em análise** | Fila de validação: o Supervisor aprova (conclui) ou reprova (volta para execução) | `/api/tarefa/em-analise`, tela `/analise` | Implementado |
 | **Origem da tarefa** | De onde a tarefa veio | `OrigemTarefa`: `MANUTENCAO_PROGRAMADA`; `CHAMADO` entra com os chamados | Implementado |
 | **Manutenção programada** | Agendamento recorrente (ou único) que gera tarefas numa frequência | `ManutencaoProgramada`, `/api/manutencao-programada`, `/planejamento/manutencoes-programadas` | Implementado |
 | **Modelo de checklist** | Molde de verificação usado pelas tarefas; o checklist preenchido fica na tarefa | `Checklist` (nome técnico mantido), `/api/checklist`, `/planejamento/modelos-checklist` | Implementado |
 | **Chamado** | Registro de um problema (ocorrência), com triagem | — | A implementar |
 | **Plano de ação** | Conjunto de uma ou várias tarefas geradas por um chamado | — | A implementar |
 
-Não usar "plano" sozinho (ambíguo com Plano de ação) nem "agenda" como nome de módulo: a tela é Tarefas, e o calendário é só uma forma de vê-las. Menu: **Operação** (Central de Controle, Tarefas), **Planejamento** (Manutenções programadas, Modelos de checklist), **Cadastros**.
+Não usar "plano" sozinho (ambíguo com Plano de ação) nem "agenda" como nome de módulo: a tela é Tarefas, e o calendário é só uma forma de vê-las. Status da tarefa: `AGENDADA → EM_EXECUCAO → EM_ANALISE → CONCLUIDA` (reprovada volta para `EM_EXECUCAO`); `CANCELADA` à parte. Menu: **Operação** (Central de Controle, Tarefas, Em análise), **Planejamento** (Manutenções programadas, Modelos de checklist), **Cadastros**.
 
 ## Decisões de arquitetura
 
@@ -194,8 +197,8 @@ Componentização:
   - Usar `paraIsoData`/`deIsoData`, nunca `toISOString()`, que converte para UTC e muda o dia.
   - "Agora" na renderização vem de `useAgora()`; `new Date()` direto no render é impuro e o lint acusa.
 - Sessão: `useSessao()` (`features/auth/hooks.ts`). Rotas internas ficam sob `RequireAuth`. Um 401 em qualquer chamada limpa a sessão e leva ao login (`lib/query-client.ts`).
-- Chamadas HTTP só via `lib/api.ts` (prefixo `/api`, erros como `ApiError`). Listagens paginadas retornam `Page<T>` (`content` + `page`).
-- Status e prioridade sempre pelos componentes compartilhados, para manter cor e texto consistentes.
+- Chamadas HTTP só via `lib/api.ts` (prefixo `/api`, erros como `ApiError`; upload com `api.upload` e `FormData`). Listagens paginadas retornam `Page<T>` (`content` + `page`).
+- Status e prioridade sempre pelos componentes compartilhados, para manter cor e texto consistentes. Cada situação tem um tom próprio (`lib/tons.ts`: `seloDoTom`, `marcadorDoTom`, `pontoDoTom`), o mesmo no selo, no calendário e na legenda; duas situações não dividem o mesmo tom.
 - Cores por tokens CSS do tema shadcn (`--primary`, etc.), nunca hex solto em componente. Paleta base do protótipo: navy `#061a37`, azul `#087cbe`, ciano `#36c6ea`, verde `#24ae72`, vermelho `#ec545b`, âmbar `#f0a633`.
 
 HTML5 e acessibilidade (tecnologia sorteada, seção 9 da documentação — é critério de avaliação):
@@ -233,6 +236,7 @@ Objetivo: o usuário vê o máximo de informação útil sem rolar, sem áreas v
   - **Busca de texto:** `contem()` ignora maiúsculas e acentos.
 - **Lista vazia:** "Nenhum … cadastrado" (`EmptyState` com o botão Novo) é diferente de "Nenhum resultado para os filtros." (`SemResultado`, com Limpar filtros).
 - **Linha clicável:** `LinhaClicavel` abre o registro em edição. Botões e links da linha mantêm a própria ação. Para o teclado, cada linha mantém o link "Editar …".
+- **Item de lista clicável (fora de tabela):** a área inteira abre o registro. O link principal recebe `after:absolute after:inset-0` (o item é `relative`), e os outros links e botões do item, `relative z-10`. Referência: `features/tarefas/components/tarefa-item.tsx`. No E2E, clicar numa posição do item (`item.click({ position })`), não no texto, que fica sob o link.
 
 ## Navegação e fluxo
 
@@ -258,6 +262,7 @@ Toda tela de cadastro ou edição segue este comportamento:
   - **`<form data-alterado={isDirty}>`:** expõe o estado de alterações pendentes aos testes.
   - **Erro ao salvar:** a tela, os dados digitados e o estado de alterações pendentes são mantidos.
 - **Componentes:** `CadastroForm` implementa tudo isso; `useAcoesCadastro` (`lib/cadastro.ts`) fornece as ações (salvar, troca para edição, mensagem de sucesso, erro). Registro que não pode ser editado (ex.: plano encerrado): `somenteLeitura`.
+- **Ação principal além de Salvar** (ex.: "Enviar para análise"): prop `acaoExtra` do `CadastroForm`; Salvar passa a ser secundário (`outline`). Referência: `features/tarefas/components/execucao-form.tsx`.
 - **Testes E2E de toda tela de cadastro:** salvar novo (vira edição e não duplica), salvar edição, Cancelar sem e com alterações, voltar no diálogo, Descartar e Cancelar depois de salvar.
 - **Sincronizar o teste depois de Salvar:**
   - aguardar a resposta da API (`page.waitForResponse`) e `data-alterado="false"`;
@@ -294,6 +299,8 @@ Frontend (`npm run test:e2e`, Playwright em `frontend/e2e`):
 - Todos rodam em `desktop` e `mobile`; tratar a gaveta do menu no celular.
 - Estados difíceis de reproduzir (401, 500) são simulados com `page.route`.
 - Testes não podem depender de dados criados por outro teste. Se precisar criar dados, criar no próprio teste com nome único.
+- Testes com vários perfis: a página entra com um perfil e os dados de outro perfil são preparados pela API (`apiComo` em `e2e/support/tarefas.ts`).
+- Testes em paralelo podem criar registros parecidos no mesmo dia: localizar o registro do teste pelo id (ex.: `[href="/tarefas/<id>"]`), não só pelo texto.
 
 Testes instáveis (flaky) são defeito, não azar. Regras:
 
@@ -305,6 +312,7 @@ Testes instáveis (flaky) são defeito, não azar. Regras:
   - `expect.poll` para estilos com transição.
 - **Mensagens repetíveis (toasts):** não usá-las como prova de que *esta* ação terminou.
 - **Dados da seed são somente leitura nos testes.** Testes que mexem num registro da seed não salvam; os que precisam salvar criam o próprio registro e o apagam no `afterEach`.
+- **Registro que a regra de negócio não deixa excluir** (ex.: manutenção programada com tarefa executada): o teste marca o registro com `marcaUnica()` (`E2E-…`) nas observações e o apaga com `DELETE /api/teste/e2e?marca=` (`LimpezaE2EController`: só no perfil `dev`, só Administrador, só marcas `E2E-`). Helper: `descartarProgramada` em `e2e/support/tarefas.ts`.
 - **Ambiente estável:**
   - não rodar o E2E enquanto containers reiniciam;
   - não compilar o backend (`mvnw test`/`compile`) com o backend dev no ar durante o E2E: o devtools recarrega no meio da compilação e o login quebra;

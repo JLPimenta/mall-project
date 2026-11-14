@@ -29,7 +29,7 @@ export function TarefaAcoes({ tarefa: t }: { tarefa: Tarefa }) {
   return (
     <>
       {t.status === 'AGENDADA' && (
-        <Button variant="ghost" size="icon-sm" aria-label={`Cancelar tarefa de ${formatar.data(t.dataHoraPrevista)}`} onClick={() => setConfirmando(true)}>
+        <Button variant="ghost" size="icon-sm" className="relative z-10" aria-label={`Cancelar tarefa de ${formatar.data(t.dataHoraPrevista)}`} onClick={() => setConfirmando(true)}>
           <BanIcon aria-hidden />
         </Button>
       )}
@@ -37,6 +37,7 @@ export function TarefaAcoes({ tarefa: t }: { tarefa: Tarefa }) {
         <Button
           variant="ghost"
           size="icon-sm"
+          className="relative z-10"
           aria-label={`Restaurar tarefa de ${formatar.data(t.dataHoraPrevista)}`}
           disabled={restaurar.isPending}
           onClick={() => executar(restaurar, 'Tarefa restaurada.')}

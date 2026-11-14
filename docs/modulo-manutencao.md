@@ -23,8 +23,8 @@ Manutenção programada (recorrência) ────────┘
 | 1. Modelo de checklist | Cadastra os itens de verificação e o tipo de resposta de cada um | Administrador, Supervisor | Planejamento | Implementado |
 | 2. Manutenção programada | Escolhe equipamento, modelo de checklist, equipe e recorrência; o sistema gera as tarefas | Administrador, Supervisor | Planejamento | Implementado |
 | 3. Tarefas | Calendário das tarefas, com atrasadas e próximas | Todos (Funcionário vê só as das suas equipes) | Operação | Implementado |
-| 4. Execução | Um membro da equipe preenche o checklist da tarefa e conclui | Funcionário da equipe | Operação | A definir |
-| 5. Validação | Supervisor confere a execução e aprova ou devolve | Administrador, Supervisor | Operação | A definir |
+| 4. Execução | Um membro da equipe assume a tarefa, preenche o checklist, anexa evidências e envia para análise | Funcionário da equipe | Operação › Tarefas | Implementado |
+| 5. Validação | Supervisor confere checklist, evidências e histórico; aprova (conclui) ou reprova (volta para o responsável) | Administrador, Supervisor | Operação › Em análise | Implementado |
 
 ## Decisões
 
@@ -36,6 +36,7 @@ Manutenção programada (recorrência) ────────┘
   - "Agenda" virou **Tarefas**.
   - Renomeado também no código, na API e no banco (migração `20261115-1-renomeia-para-tarefa.sql`, que preserva os dados).
   - A tarefa ganhou a coluna `origem`.
+- 14/11/2026: execução e validação. O responsável é quem assume; o checklist é preenchido na execução; cada envio para análise exige ao menos uma imagem nova; reprovar exige motivo e devolve ao mesmo responsável.
 
 ## Equipamento
 
@@ -102,9 +103,33 @@ Regras de geração das tarefas:
 - **Atrasada:** tarefa agendada cuja data e hora já passaram. É calculado na consulta, não gravado.
 - **Horários:** fuso do shopping (`America/Araguaina`), configurável pela variável de ambiente `APP_FUSO_HORARIO`.
 
+## Execução e validação
+
+```
+AGENDADA ──assumir──► EM_EXECUCAO ──enviar──► EM_ANALISE ──aprovar──► CONCLUIDA
+                          ▲                        │
+                          └───────reprovar─────────┘   (mesmo responsável)
+```
+
+| Ação | Quem | Regra |
+|---|---|---|
+| Assumir | Membro da equipe da tarefa | Só tarefa agendada (inclusive atrasada ou futura). Copia os itens do modelo de checklist para a tarefa; editar o modelo depois não muda a execução. Dois membros ao mesmo tempo: o segundo recebe erro (bloqueio da linha) |
+| Preencher e salvar | Responsável | Só em execução. Sim/Não, número (até ±999.999.999) e texto (até o máximo do item). Salvar não exige os obrigatórios |
+| Anexar evidência | Responsável | JPG, PNG ou WebP, identificado pelo conteúdo; até 5 MB (o navegador reduz fotos grandes para JPEG de até 1920 px); até 10 por envio e 30 por tarefa |
+| Remover evidência | Responsável | Só as ainda não enviadas. As enviadas ficam no histórico |
+| Enviar para análise | Responsável | Itens obrigatórios respondidos e ao menos uma imagem nova (no reenvio, também). A observação do responsável vai para o histórico |
+| Aprovar | Administrador, Supervisor | Só em análise. Observação opcional. Conclui a tarefa |
+| Reprovar | Administrador, Supervisor | Só em análise. Motivo obrigatório. Volta para execução com o mesmo responsável e as mesmas respostas |
+
+- **Histórico (RNF06):** assumir, enviar, aprovar, reprovar, cancelar e restaurar gravam ação, usuário, data e hora, status resultante e observação ou motivo. Cada envio é numerado e liga as evidências daquele envio.
+- **Acesso:** o Funcionário só vê tarefas das suas equipes. A fila Em análise, aprovar e reprovar são só de Administrador e Supervisor (`SecurityConfiguration`).
+- **Imagens:** ficam no PostgreSQL (tabela `arquivo`, separada dos metadados), sem volume ou serviço extra para subir o ambiente.
+- **Exclusão:** manutenção programada com tarefa executada não pode ser excluída, para preservar o histórico; ela deve ser encerrada. A única exceção é a limpeza dos testes E2E (`/api/teste/e2e`, perfil `dev`).
+
 ## Pendências
 
-- **Execução (passo 4):** copiar os itens do modelo de checklist para a tarefa quando a execução começar, para que editar o modelo não altere execuções já feitas.
+- **Respostas por envio:** o histórico guarda as imagens e a observação de cada envio, mas o checklist mostra só as respostas atuais.
+- **Liberar tarefa:** hoje o responsável não pode devolver uma tarefa assumida por engano.
 - **Chamados:**
   - incluir `CHAMADO` em `OrigemTarefa`;
   - tornar `manutencao_programada_id` opcional;
