@@ -50,6 +50,7 @@ public class SecurityConfiguration {
                 // alcança os endpoints herdados de BaseController/BaseSearchController.
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, LOGIN_URL).permitAll()
+                        .requestMatchers("/api/central", "/api/central/**").hasAnyRole(GESTAO)
                         .requestMatchers("/api/checklist", "/api/checklist/**").hasAnyRole(GESTAO)
                         .requestMatchers("/api/equipamento", "/api/equipamento/**").hasAnyRole(GESTAO)
                         .requestMatchers("/api/equipe", "/api/equipe/**").hasAnyRole(GESTAO)

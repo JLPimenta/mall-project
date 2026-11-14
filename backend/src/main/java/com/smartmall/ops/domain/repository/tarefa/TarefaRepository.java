@@ -44,6 +44,16 @@ public interface TarefaRepository extends BaseRepository<Tarefa> {
 
     List<Tarefa> findByProgramadaIdAndDataHoraPrevistaBetween(String programadaId, LocalDateTime de, LocalDateTime ate);
 
+    long countByStatus(StatusTarefa status);
+
+    /** Agendadas com data e hora em [de, agora): a mesma regra de Tarefa.isAtrasada. */
+    @Query("select count(t) from Tarefa t where t.status = 'AGENDADA' and t.dataHoraPrevista >= :de and t.dataHoraPrevista < :agora")
+    long contarAtrasadas(LocalDateTime de, LocalDateTime agora);
+
+    /** Equipes distintas com ao menos uma tarefa no status informado. */
+    @Query("select count(distinct t.programada.equipe.id) from Tarefa t where t.status = :status")
+    long contarEquipesComStatus(StatusTarefa status);
+
     boolean existsByProgramadaIdAndStatusNotIn(String programadaId, Collection<StatusTarefa> status);
 
     @Modifying

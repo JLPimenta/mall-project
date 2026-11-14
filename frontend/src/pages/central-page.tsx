@@ -6,6 +6,7 @@ import { PageHeader } from '@/components/shared/page-header'
 import { SimulatedBadge } from '@/components/shared/simulated-badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
+import { IndicadoresCentral } from '@/features/central/components/indicadores-central'
 import { PisoSelect } from '@/features/pisos/components/piso-select'
 import { usePisos } from '@/features/pisos/hooks'
 
@@ -19,6 +20,8 @@ export function CentralPage() {
   return (
     <>
       <PageHeader title="Central de Controle" />
+
+      <IndicadoresCentral />
 
       {isPending && <Skeleton className="h-64 w-full" />}
 
