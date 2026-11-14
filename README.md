@@ -30,6 +30,22 @@ cd frontend && npm install && npm run dev
 
 O backend sobe o PostgreSQL do `compose.yaml` automaticamente e aplica as migrações com dados de demonstração. O `.env` é opcional; veja `.env.example`.
 
+No VS Code com PowerShell, use dois terminais abertos na raiz do projeto. No primeiro:
+
+```powershell
+cd backend
+$env:JAVA_HOME = 'C:\Program Files\Java\jdk-21.0.12.1' # ajuste se o JDK 21 estiver em outra pasta
+.\mvnw.cmd spring-boot:run
+```
+
+No segundo:
+
+```powershell
+cd frontend
+npm install
+npm run dev
+```
+
 ## Rodar tudo em containers
 
 ```bash
@@ -55,6 +71,17 @@ npm run qr:gerar -- --base-url https://seu-dominio.com --output ../docs/qrcodes/
 ```
 
 O gerador exige um domínio ou IP acessível pelo celular e recusa `localhost`. Cada código abre `/relatar?local=<codigo>` para o local correspondente.
+
+### Como acessar as funções
+
+| Função | Como abrir | Acesso |
+|---|---|---|
+| Formulário de relato | Abra `http://localhost:5173/relatar?local=banheiro-norte` no computador, ou leia um QR Code de `docs/qrcodes/demo/` com o celular quando o servidor estiver acessível na rede. O campo Local vem preenchido e pode ser editado. | Sem login |
+| Triagem dos chamados | Abra `http://localhost:5173/login`, entre como Supervisor ou Administrador e vá em **Operação → Chamados**. Abra um relato para aprovar e criar tarefa ou arquivar com motivo. | Supervisor e Administrador |
+| Tarefa aprovada | No chamado aprovado, clique em **Abrir tarefa criada**. A equipe responsável também encontra a tarefa em **Operação → Tarefas**. | Equipe responsável e gestão |
+| Membros e permissões | Após entrar, vá em **Cadastros → Membros e permissões**. | Administrador |
+
+Os arquivos PNG/SVG e a lista das URLs codificadas ficam em [`docs/qrcodes/demo/`](docs/qrcodes/demo/README.md). O Vite iniciado apenas com `npm run dev` nesta máquina atende `localhost`; para testar a leitura pelo celular, use a stack em containers ou inicie o Vite com `npm run dev -- --host 0.0.0.0` e confirme que o celular alcança o IP da máquina.
 
 ## Contas de demonstração
 
