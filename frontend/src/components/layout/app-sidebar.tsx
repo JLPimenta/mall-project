@@ -1,4 +1,3 @@
-import { Building2Icon } from 'lucide-react'
 import { NavLink, useLocation } from 'react-router'
 import {
   Sidebar,
@@ -13,6 +12,7 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar'
 import { useSessao } from '@/features/auth/hooks'
+import { Logo, LogoIcone } from './logo'
 import { gruposPermitidos } from './navigation'
 
 export function AppSidebar() {
@@ -23,10 +23,11 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
-        <div className="flex items-center gap-2 px-2 py-1.5">
-          <Building2Icon className="size-5 shrink-0 text-sidebar-primary" aria-hidden />
-          <span className="truncate font-semibold group-data-[collapsible=icon]:hidden">SmartMall Ops</span>
+        {/* Expandido: logo completo num cartão branco. Recolhido: só o ícone. */}
+        <div className="rounded-lg bg-white px-3 py-2 group-data-[collapsible=icon]:hidden">
+          <Logo className="mx-auto max-h-12 w-auto" />
         </div>
+        <LogoIcone className="hidden group-data-[collapsible=icon]:block" />
       </SidebarHeader>
       <SidebarContent>
         <nav aria-label="Principal">

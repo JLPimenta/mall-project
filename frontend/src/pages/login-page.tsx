@@ -1,5 +1,5 @@
-import { Building2Icon } from 'lucide-react'
 import { Navigate, useLocation, useNavigate } from 'react-router'
+import { Logo } from '@/components/layout/logo'
 import { LoginForm } from '@/features/auth/components/login-form'
 import { podeAcessar } from '@/components/layout/navigation'
 import { useSessao } from '@/features/auth/hooks'
@@ -20,29 +20,20 @@ export function LoginPage() {
   return (
     <div className="grid min-h-svh lg:grid-cols-2">
       <aside className="hidden flex-col justify-between bg-sidebar p-10 text-sidebar-foreground lg:flex">
-        <Marca />
+        <div className="w-fit rounded-xl bg-white px-5 py-4">
+          <Logo className="max-w-72" />
+        </div>
         <p className="text-sm text-sidebar-foreground/70">Capim Dourado Shopping</p>
       </aside>
       <main className="flex items-center justify-center p-6">
         <div className="grid w-full max-w-sm gap-6">
-          <div className="lg:hidden">
-            <Marca />
-          </div>
+          <Logo className="max-w-56 lg:hidden" />
           <h1 id="login-titulo" className="text-2xl font-semibold tracking-tight">
             Entrar
           </h1>
           <LoginForm onSuccess={(logado) => navigate(destinoPara(logado.perfil), { replace: true })} />
         </div>
       </main>
-    </div>
-  )
-}
-
-function Marca() {
-  return (
-    <div className="flex items-center gap-2 font-semibold">
-      <Building2Icon className="size-6 text-sidebar-primary" aria-hidden />
-      SmartMall Ops AI
     </div>
   )
 }
