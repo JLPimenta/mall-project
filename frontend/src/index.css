@@ -149,6 +149,31 @@
     background-image: linear-gradient(90deg, var(--primary), var(--gradiente-fim));
 }
 
+/* Easter egg do login (dois cliques no logo): o elefante atravessa a frase e cada letra cai quando ele passa. */
+.elefante-marca {
+    animation: elefante-passa var(--travessia, 3600ms) linear forwards;
+}
+[data-derrubando] .letra-marca {
+    animation: letra-cai 1100ms cubic-bezier(0.5, 0, 0.9, 0.4) var(--atraso, 0ms) forwards;
+}
+@keyframes elefante-passa {
+    from { transform: translateX(-140px); }
+    to { transform: translateX(calc(var(--percurso, 800px) - 140px)); }
+}
+@keyframes letra-cai {
+    0% { transform: none; }
+    15% { transform: translateY(-10px) rotate(calc(var(--giro, 0deg) * 0.1)); }
+    100% { transform: translate(var(--deriva, 0px), 120vh) rotate(var(--giro, 0deg)); }
+}
+@keyframes elefante-surge {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+    [data-derrubando] .letra-marca { animation: none; }
+    .elefante-marca { animation: elefante-surge 600ms ease-out forwards; }
+}
+
 @layer base {
   /* Menu lateral com o mesmo gradiente vertical dos painéis da marca. */
   [data-slot="sidebar-inner"] {

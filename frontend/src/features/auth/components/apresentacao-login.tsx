@@ -1,4 +1,6 @@
+import { useCallback, useState } from 'react'
 import { Logo } from '@/components/layout/logo'
+import { FraseMarca } from './frase-marca'
 
 /** Círculos concêntricos decorativos no canto do painel. */
 function Circulos() {
@@ -13,16 +15,20 @@ function Circulos() {
 
 /** Painel da marca no login (só em telas largas): logo, frase e aviso de ambiente. */
 export function ApresentacaoLogin() {
+  // Easter egg: dois cliques no logo soltam o elefante, que derruba as letras da frase.
+  const [rodada, setRodada] = useState(0)
+  const soltarElefante = () => {
+    window.getSelection()?.removeAllRanges()
+    setRodada((r) => (r > 0 ? r : Date.now()))
+  }
+  const fim = useCallback(() => setRodada(0), [])
+
   return (
     <aside className="relative hidden flex-col justify-between overflow-hidden bg-painel-marca p-12 text-white lg:flex">
-      <Logo tom="claro" className="max-w-52" />
-      <div className="relative grid max-w-xl gap-5">
-        <p className="text-xs font-semibold tracking-[0.2em] text-marca-ciano uppercase">Operação conectada</p>
-        <p className="text-5xl leading-[1.05] font-bold tracking-tight text-balance">
-          Decisões operacionais mais claras, <span className="text-marca-ciano">em tempo real.</span>
-        </p>
-        <p className="max-w-md text-base text-white/85">Centralize ocorrências, equipes, ativos e alertas em uma única visão operacional.</p>
+      <div onDoubleClick={soltarElefante} className="w-fit select-none">
+        <Logo tom="claro" className="max-w-52" />
       </div>
+      <FraseMarca rodada={rodada} onFim={fim} />
       <p className="relative text-xs text-white/70">Ambiente local de demonstração · Dados sintéticos</p>
       <Circulos />
     </aside>
