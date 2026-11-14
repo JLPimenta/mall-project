@@ -48,7 +48,6 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
               id="email"
               type="email"
               autoComplete="username"
-              placeholder="nome@smartmall.local"
               className="h-11 rounded-lg px-3.5"
               required
               maxLength={LIMITE_LOGIN.email}
@@ -63,7 +62,6 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
               id="senha"
               type="password"
               autoComplete="current-password"
-              placeholder="Digite sua senha"
               className="h-11 rounded-lg px-3.5"
               required
               maxLength={LIMITE_LOGIN.senha}

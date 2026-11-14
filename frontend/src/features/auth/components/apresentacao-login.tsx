@@ -13,7 +13,7 @@ function Circulos() {
   )
 }
 
-/** Painel da marca no login (só em telas largas): logo, frase e aviso de ambiente. */
+/** Painel da marca no login (só em telas largas): logo e frase. */
 export function ApresentacaoLogin() {
   // Easter egg: dois cliques no logo soltam o elefante, que derruba as letras da frase.
   const [rodada, setRodada] = useState(0)
@@ -29,7 +29,9 @@ export function ApresentacaoLogin() {
         <Logo tom="claro" className="max-w-52" />
       </div>
       <FraseMarca rodada={rodada} onFim={fim} />
-      <p className="relative text-xs text-white/70">Ambiente local de demonstração · Dados sintéticos</p>
+      {/* Mantém a frase no meio do painel (justify-between). */}
+      <span aria-hidden />
+
       <Circulos />
     </aside>
   )

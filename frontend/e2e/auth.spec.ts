@@ -19,7 +19,7 @@ test.describe('Tela de login', () => {
     // A frase inteira fica para leitores de tela; as letras visíveis são decorativas (easter egg, aria-hidden).
     await expect(page.getByRole('complementary')).toMatchAriaSnapshot(`
       - paragraph: Decisões operacionais mais claras, em tempo real.
-      - paragraph: Centralize ocorrências, equipes, ativos e alertas em uma única visão operacional.
+      - paragraph: Acompanhe chamados, tarefas, equipes e estoque do Capim Dourado Shopping.
     `)
   })
 

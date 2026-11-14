@@ -10,7 +10,7 @@ const LARGURA_ELEFANTE = 140
 
 const TITULO = 'Decisões operacionais mais claras,'
 const DESTAQUE = 'em tempo real.'
-const SUBTITULO = 'Centralize ocorrências, equipes, ativos e alertas em uma única visão operacional.'
+const SUBTITULO = 'Acompanhe chamados, tarefas, equipes e estoque do Capim Dourado Shopping.'
 
 /** Texto quebrado em letras (aria-hidden); a frase inteira fica para leitores de tela em `sr-only`. */
 function Letras({ texto }: { texto: string }) {
@@ -75,7 +75,6 @@ export function FraseMarca({ rodada, onFim }: { rodada: number; onFim: () => voi
 
   return (
     <div ref={bloco} data-derrubando={ativo || undefined} className={cn('relative grid max-w-xl gap-5', voltando && 'animate-in duration-700 fade-in')}>
-      <p className="text-xs font-semibold tracking-[0.2em] text-marca-ciano uppercase">Operação conectada</p>
       <p className="text-5xl leading-[1.05] font-bold tracking-tight">
         <span className="sr-only">
           {TITULO} {DESTAQUE}
