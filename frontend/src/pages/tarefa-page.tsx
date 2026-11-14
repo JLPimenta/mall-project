@@ -13,6 +13,7 @@ import { ExecucaoForm } from '@/features/tarefas/components/execucao-form'
 import { HistoricoTarefa } from '@/features/tarefas/components/historico-tarefa'
 import { TarefaResumo } from '@/features/tarefas/components/tarefa-resumo'
 import { useTarefa } from '@/features/tarefas/hooks'
+import { tituloTarefa } from '@/features/tarefas/types'
 import { useVoltarPara } from '@/lib/navegacao'
 
 /** Tarefa: dados, execução pelo responsável, avaliação pela gestão e histórico. */
@@ -25,7 +26,7 @@ export function TarefaPage() {
   const voltarPara = useVoltarPara('/tarefas')
   const voltar = () => navigate(voltarPara)
   const detalhe = consulta.data
-  const titulo = detalhe ? `${detalhe.tarefa.equipamento.codigo} · ${detalhe.tarefa.equipamento.nome}` : 'Tarefa'
+  const titulo = detalhe ? tituloTarefa(detalhe.tarefa) : 'Tarefa'
 
   return (
     <>
@@ -50,9 +51,9 @@ export function TarefaPage() {
             <AvisoReprovacao detalhe={detalhe} />
             {detalhe.acoes.executar ? (
               <ExecucaoForm key={detalhe.tarefa.id} detalhe={detalhe} onCancel={voltar} />
-            ) : (
+            ) : (detalhe.itens.length > 0 || detalhe.observacao ? (
               <ChecklistRespostas itens={detalhe.itens} observacao={detalhe.observacao} />
-            )}
+            ) : null)}
             <HistoricoTarefa detalhe={detalhe} />
             {detalhe.acoes.avaliar && <AvaliacaoTarefa tarefaId={id} onAvaliada={voltar} />}
           </div>

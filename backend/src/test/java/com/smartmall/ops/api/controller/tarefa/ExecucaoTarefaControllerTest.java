@@ -51,10 +51,12 @@ class ExecucaoTarefaControllerTest {
     @MockitoBean private IExecucaoTarefaService service;
     @MockitoBean private UserDetailsService userDetailsService;
 
-    private static RequestPostProcessor como(Perfil perfil) {
+    private RequestPostProcessor como(Perfil perfil) {
         var usuario = new Usuario("Teste", "t@smartmall.local", "h", perfil, true);
         usuario.setId("u-" + perfil.name().toLowerCase());
-        return user(new UsuarioAutenticado(usuario));
+        var autenticado = new UsuarioAutenticado(usuario);
+        when(userDetailsService.loadUserByUsername(usuario.getEmail())).thenReturn(autenticado);
+        return user(autenticado);
     }
 
     private static TarefaDetalheResponse detalhe() {

@@ -9,6 +9,8 @@ import com.smartmall.ops.domain.repository.manutencao.ManutencaoProgramadaReposi
 import com.smartmall.ops.domain.repository.tarefa.TarefaEvidenciaRepository;
 import com.smartmall.ops.domain.repository.tarefa.TarefaRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.regex.Pattern;
@@ -28,6 +30,8 @@ public class LimpezaE2EService {
     private final TarefaRepository tarefaRepository;
     private final TarefaEvidenciaRepository evidenciaRepository;
     private final ArquivoRepository arquivoRepository;
+    @Autowired(required = false)
+    private JdbcTemplate jdbc;
     private final ItemEstoqueRepository itemRepository;
     private final MovimentacaoEstoqueRepository movimentacaoRepository;
 
@@ -56,11 +60,30 @@ public class LimpezaE2EService {
             arquivoRepository.deleteAllByIdInBatch(arquivos);
             programadaRepository.delete(programada);
         }
+        int chamados = 0;
+        if (jdbc != null) {
+            var ids = jdbc.queryForList("select id from chamado where descricao like ?", String.class, "%" + marca + "%");
+            for (String id : ids) {
+                var arquivos = jdbc.queryForList("""
+                        select e.arquivo_id from tarefa_evidencia e
+                        join tarefa t on t.id=e.tarefa_id
+                        join plano_acao p on p.id=t.plano_acao_id where p.chamado_id=?
+                        """, String.class, id);
+                arquivos.addAll(jdbc.queryForList("select arquivo_id from chamado_midia where chamado_id=?", String.class, id));
+                jdbc.update("delete from tarefa where plano_acao_id in (select id from plano_acao where chamado_id=?)", id);
+                jdbc.update("delete from plano_acao where chamado_id=?", id);
+                jdbc.update("delete from chamado_historico where chamado_id=?", id);
+                jdbc.update("delete from chamado_midia where chamado_id=?", id);
+                for (String arquivoId : arquivos) jdbc.update("delete from arquivo where id=?", arquivoId);
+                jdbc.update("delete from chamado where id=?", id);
+                chamados++;
+            }
+        }
         // Itens de estoque do teste usam a marca como código; as movimentações saem junto (rastreabilidade de teste).
         for (var item : itemRepository.findByCodigo(marca)) {
             movimentacaoRepository.excluirDoItem(item.getId());
             itemRepository.delete(item);
         }
-        return programadas.size();
+        return programadas.size() + chamados;
     }
 }

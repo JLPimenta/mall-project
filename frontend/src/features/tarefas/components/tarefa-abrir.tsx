@@ -3,7 +3,7 @@ import { formatar } from '@/lib/datas'
 import { useOrigemAtual } from '@/lib/navegacao'
 import { cn } from '@/lib/utils'
 import { faixaHorario } from '../formatos'
-import type { Tarefa } from '../types'
+import { tituloTarefa, type Tarefa } from '../types'
 
 type TarefaAbrirProps = {
   tarefa: Tarefa
@@ -18,7 +18,7 @@ type TarefaAbrirProps = {
  */
 export function TarefaAbrir({ tarefa: t, oculto, className }: TarefaAbrirProps) {
   const origem = useOrigemAtual()
-  const titulo = `${t.equipamento.codigo} · ${t.equipamento.nome}`
+  const titulo = tituloTarefa(t)
   const quando = `${formatar.data(t.dataHoraPrevista)}, ${faixaHorario(t.dataHoraPrevista, t.duracaoMinutos)}`
 
   return (

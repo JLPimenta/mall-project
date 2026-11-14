@@ -1,5 +1,5 @@
 import { Building2Icon } from 'lucide-react'
-import { Navigate, useLocation, useNavigate } from 'react-router'
+import { Link, Navigate, useLocation, useNavigate } from 'react-router'
 import { LoginForm } from '@/features/auth/components/login-form'
 import { podeAcessar } from '@/components/layout/navigation'
 import { useSessao } from '@/features/auth/hooks'
@@ -32,6 +32,7 @@ export function LoginPage() {
             Entrar
           </h1>
           <LoginForm onSuccess={(logado) => navigate(destinoPara(logado.perfil), { replace: true })} />
+          <Link to="/relatar" className="text-center text-sm text-primary underline underline-offset-4">Relatar ocorrência sem login</Link>
         </div>
       </main>
     </div>

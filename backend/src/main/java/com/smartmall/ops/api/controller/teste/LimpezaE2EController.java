@@ -27,7 +27,7 @@ public class LimpezaE2EController {
     }
 
     @DeleteMapping("/e2e")
-    @Operation(description = "Apaga as manutenções programadas com a marca do teste (ex.: E2E-AB12CD34) e todas as suas tarefas.")
+    @Operation(description = "Apaga manutenções programadas e chamados com a marca do teste (ex.: E2E-AB12CD34) e suas dependências.")
     public ResponseEntity<Void> excluirMarcados(@RequestParam String marca) {
         service.excluirMarcados(marca);
         return ResponseEntity.noContent().build();
