@@ -1,5 +1,6 @@
 package com.smartmall.ops.api.controller.manutencao;
 
+import com.smartmall.ops.api.config.security.UsuarioAutenticado;
 import com.smartmall.ops.domain.core.controller.BaseController;
 import com.smartmall.ops.domain.entity.ManutencaoProgramada;
 import com.smartmall.ops.domain.model.manutencao.IManutencaoProgramadaMapper;
@@ -12,6 +13,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.SortDefault;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -49,7 +51,7 @@ public class ManutencaoProgramadaController extends BaseController<ManutencaoPro
     @PostMapping("/{id}/encerrar")
     @Transactional
     @Operation(description = "Desativa a manutenção programada e cancela as tarefas futuras ainda agendadas.")
-    public ManutencaoProgramadaResponse encerrar(@PathVariable String id) {
-        return getMapper().toResponse(programadaService.encerrar(id));
+    public ManutencaoProgramadaResponse encerrar(@PathVariable String id, @AuthenticationPrincipal UsuarioAutenticado usuario) {
+        return getMapper().toResponse(programadaService.encerrar(id, usuario.getId()));
     }
 }

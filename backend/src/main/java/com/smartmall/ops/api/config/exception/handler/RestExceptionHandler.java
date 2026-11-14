@@ -13,6 +13,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -55,6 +56,13 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
     protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
         log.info(ERRO_NAO_ESPERADO, ex);
         return new ResponseEntity<>(ResponseError.badRequest(ex), HttpStatus.BAD_REQUEST);
+    }
+
+    /** Arquivo acima de spring.servlet.multipart.max-file-size. */
+    @Override
+    protected ResponseEntity<Object> handleMaxUploadSizeExceededException(MaxUploadSizeExceededException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+        log.info(ERRO_NAO_ESPERADO, ex);
+        return new ResponseEntity<>(ResponseError.of(HttpStatus.PAYLOAD_TOO_LARGE, "A imagem deve ter no máximo 5 MB."), HttpStatus.PAYLOAD_TOO_LARGE);
     }
 
     @ExceptionHandler(EntityNotFoundException.class)

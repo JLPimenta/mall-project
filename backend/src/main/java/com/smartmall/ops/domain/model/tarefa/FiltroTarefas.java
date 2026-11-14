@@ -31,8 +31,8 @@ public class FiltroTarefas {
     @Size(max = 36)
     private String equipeId;
 
-    /** AGENDADA, ATRASADA ou CANCELADA. Nulo = todas. */
+    /** Nulo = todas. AGENDADA exclui as atrasadas. */
     private Situacao situacao;
 
-    public enum Situacao { AGENDADA, ATRASADA, CANCELADA }
+    public enum Situacao { AGENDADA, ATRASADA, EM_EXECUCAO, EM_ANALISE, CONCLUIDA, CANCELADA }
 }

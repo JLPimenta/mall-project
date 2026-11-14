@@ -16,7 +16,7 @@ public interface ITarefaService {
 
     ResumoTarefasResponse resumo(String membroId);
 
-    TarefaResponse cancelar(String id);
+    TarefaResponse cancelar(String id, String usuarioId);
 
-    TarefaResponse restaurar(String id);
+    TarefaResponse restaurar(String id, String usuarioId);
 }

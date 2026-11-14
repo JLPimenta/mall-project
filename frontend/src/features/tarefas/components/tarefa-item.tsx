@@ -42,16 +42,35 @@ export function TarefaItem({ tarefa: t, podeGerenciar, mostrarData, compacto }: 
     })
 
   return (
-    <li className={cn('flex items-start gap-3 py-3', t.status === 'CANCELADA' && 'text-muted-foreground')}>
+    // A área inteira (horário e dados) abre a tarefa: o ::after do link cobre o item; os demais
+    // links e botões ficam acima dele (relative z-10) e mantêm a própria ação.
+    <li
+      className={cn(
+        'group/tarefa relative -mx-2 flex items-start gap-3 rounded-md px-2 py-3 hover:bg-muted/60 has-[a[data-abrir]:focus-visible]:ring-2 has-[a[data-abrir]:focus-visible]:ring-ring',
+        t.status === 'CANCELADA' && 'text-muted-foreground',
+      )}
+    >
       <div className="w-24 shrink-0 text-sm tabular-nums">
         {mostrarData && <div className="font-medium capitalize">{formatar.diaCurto(t.dataHoraPrevista)}</div>}
         <div className={cn(!mostrarData && 'font-medium')}>{faixaHorario(t.dataHoraPrevista, t.duracaoMinutos)}</div>
       </div>
       <div className="grid min-w-0 flex-1 gap-0.5">
-        {!compacto && <span className={cn('truncate text-sm font-medium', t.status === 'CANCELADA' && 'line-through')}>{titulo}</span>}
+        <Link
+          to={`/tarefas/${t.id}`}
+          state={origem}
+          data-abrir
+          className={cn(
+            'truncate text-sm font-medium underline-offset-4 outline-none group-hover/tarefa:underline after:absolute after:inset-0 after:content-[""]',
+            t.status === 'CANCELADA' && 'line-through',
+          )}
+          aria-label={`Abrir tarefa de ${titulo}, ${quando}`}
+        >
+          <span className={cn(compacto && 'sr-only')}>{titulo}</span>
+        </Link>
         {!compacto && (
           <span className="truncate text-xs text-muted-foreground">
             {t.piso} · {t.localizacao} · {t.equipe.nome}
+            {t.responsavel && ` · ${t.responsavel.nome}`}
           </span>
         )}
         <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -62,7 +81,7 @@ export function TarefaItem({ tarefa: t, podeGerenciar, mostrarData, compacto }: 
               <Link
                 to={`/planejamento/manutencoes-programadas/${t.manutencaoProgramadaId}`}
                 state={origem}
-                className="text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+                className="relative z-10 text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
                 aria-label={`Abrir a manutenção programada de ${titulo}`}
               >
                 {origemLabel[t.origem]}
@@ -73,7 +92,7 @@ export function TarefaItem({ tarefa: t, podeGerenciar, mostrarData, compacto }: 
         </span>
       </div>
       {podeGerenciar && t.status === 'AGENDADA' && (
-        <Button variant="ghost" size="icon-sm" aria-label={`Cancelar tarefa de ${formatar.data(t.dataHoraPrevista)}`} onClick={() => setConfirmando(true)}>
+        <Button variant="ghost" size="icon-sm" className="relative z-10" aria-label={`Cancelar tarefa de ${formatar.data(t.dataHoraPrevista)}`} onClick={() => setConfirmando(true)}>
           <BanIcon aria-hidden />
         </Button>
       )}
@@ -81,6 +100,7 @@ export function TarefaItem({ tarefa: t, podeGerenciar, mostrarData, compacto }: 
         <Button
           variant="ghost"
           size="icon-sm"
+          className="relative z-10"
           aria-label={`Restaurar tarefa de ${formatar.data(t.dataHoraPrevista)}`}
           disabled={restaurar.isPending}
           onClick={() => executar(restaurar, 'Tarefa restaurada.')}

@@ -34,11 +34,13 @@ function buildUrl(path: string, params?: QueryParams) {
 
 async function request<T>(method: string, path: string, body?: unknown, params?: QueryParams): Promise<T> {
   let response: Response
+  // FormData (upload): o navegador define o Content-Type com o boundary do multipart.
+  const formulario = body instanceof FormData
   try {
     response = await fetch(buildUrl(path, params), {
       method,
-      headers: body ? { 'Content-Type': 'application/json' } : undefined,
-      body: body ? JSON.stringify(body) : undefined,
+      headers: body && !formulario ? { 'Content-Type': 'application/json' } : undefined,
+      body: formulario ? body : body ? JSON.stringify(body) : undefined,
     })
   } catch {
     throw new ApiError({ status: 0, message: 'Servidor indisponível.' })
@@ -56,5 +58,6 @@ export const api = {
   get: <T>(path: string, params?: QueryParams) => request<T>('GET', path, undefined, params),
   post: <T>(path: string, body?: unknown) => request<T>('POST', path, body),
   put: <T>(path: string, body: unknown) => request<T>('PUT', path, body),
-  delete: (path: string) => request<void>('DELETE', path),
+  delete: <T = void>(path: string) => request<T>('DELETE', path),
+  upload: <T>(path: string, dados: FormData) => request<T>('POST', path, dados),
 }

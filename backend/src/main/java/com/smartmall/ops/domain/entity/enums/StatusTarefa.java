@@ -1,7 +1,13 @@
 package com.smartmall.ops.domain.entity.enums;
 
-/** Execução e validação (próxima etapa) acrescentarão novos status. "Atrasada" é calculado, não gravado. */
+/**
+ * AGENDADA → EM_EXECUCAO (assumida) → EM_ANALISE (enviada) → CONCLUIDA (aprovada).
+ * Reprovada volta para EM_EXECUCAO com o mesmo responsável. "Atrasada" é calculado, não gravado.
+ */
 public enum StatusTarefa {
     AGENDADA,
+    EM_EXECUCAO,
+    EM_ANALISE,
+    CONCLUIDA,
     CANCELADA
 }

@@ -105,7 +105,7 @@ test.describe('Permissões por perfil', () => {
     const menu = await navegacao(page, isMobile)
     await expect(menu.getByRole('link', { name: 'Tarefas' })).toBeVisible()
     await expect(menu.getByRole('link', { name: 'Central de Controle' })).toHaveCount(0)
-    for (const restrito of ['Manutenções programadas', 'Modelos de checklist', 'Equipamentos', 'Equipes']) {
+    for (const restrito of ['Em análise', 'Manutenções programadas', 'Modelos de checklist', 'Equipamentos', 'Equipes']) {
       await expect(menu.getByRole('link', { name: restrito })).toHaveCount(0)
     }
 

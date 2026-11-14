@@ -3,6 +3,8 @@ import { createBrowserRouter, type RouteObject } from 'react-router'
 import { AppShell } from '@/components/layout/app-shell'
 import { RequireAuth } from '@/features/auth/components/require-auth'
 import { RequirePerfil } from '@/features/auth/components/require-perfil'
+import { EmAnalisePage } from '@/pages/em-analise-page'
+import { TarefaPage } from '@/pages/tarefa-page'
 import { TarefasPage } from '@/pages/tarefas-page'
 import { CentralPage } from '@/pages/central-page'
 import { ChecklistFormPage } from '@/pages/checklist-form-page'
@@ -45,7 +47,14 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <HomeRedirect /> },
       { path: 'central', element: protegida('/central', <CentralPage />) },
-      { path: 'tarefas', element: protegida('/tarefas', <TarefasPage />) },
+      {
+        path: 'tarefas',
+        children: [
+          { index: true, element: protegida('/tarefas', <TarefasPage />) },
+          { path: ':id', element: protegida('/tarefas', <TarefaPage />) },
+        ],
+      },
+      { path: 'analise', element: protegida('/analise', <EmAnalisePage />) },
       cadastro('/planejamento/manutencoes-programadas', <ManutencoesProgramadasPage />, <ManutencaoProgramadaFormPage />, 'nova'),
       cadastro('/planejamento/modelos-checklist', <ChecklistsPage />, <ChecklistFormPage />),
       cadastro('/cadastros/equipamentos', <EquipamentosPage />, <EquipamentoFormPage />),

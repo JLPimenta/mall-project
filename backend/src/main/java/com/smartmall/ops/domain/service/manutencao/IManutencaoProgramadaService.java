@@ -10,7 +10,8 @@ import java.util.Map;
 public interface IManutencaoProgramadaService extends IBaseService<ManutencaoProgramada> {
 
     /** Desativa a manutenção programada e cancela as tarefas futuras ainda agendadas. */
-    ManutencaoProgramada encerrar(String id);
+    /** @param usuarioId quem encerrou; registrado no histórico das tarefas canceladas. */
+    ManutencaoProgramada encerrar(String id, String usuarioId);
 
     /** Gera as manutenções das manutenções programadas ativos até o horizonte. Rodado diariamente e na inicialização. */
     int estenderHorizonte();

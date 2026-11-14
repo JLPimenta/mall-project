@@ -104,7 +104,7 @@ class TarefaControllerTest {
     void supervisorCancela() throws Exception {
         mvc.perform(post("/api/tarefa/m1/cancelar").with(como(Perfil.SUPERVISOR))).andExpect(status().isOk());
 
-        verify(service).cancelar("m1");
+        verify(service).cancelar("m1", "u-supervisor");
     }
 
     @Test

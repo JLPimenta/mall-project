@@ -18,4 +18,5 @@
     <include file="db/changes/manutencao/20261114-1-cria-plano-manutencao.sql"/>
     <include file="db/changes/manutencao/20261114-2-seed-plano-manutencao.sql" context="dev"/>
     <include file="db/changes/tarefa/20261115-1-renomeia-para-tarefa.sql"/>
+    <include file="db/changes/tarefa/20261116-1-execucao-tarefa.sql"/>
 </databaseChangeLog>

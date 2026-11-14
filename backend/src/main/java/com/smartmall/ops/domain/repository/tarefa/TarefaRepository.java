@@ -3,6 +3,8 @@ package com.smartmall.ops.domain.repository.tarefa;
 import com.smartmall.ops.domain.core.repository.BaseRepository;
 import com.smartmall.ops.domain.entity.Tarefa;
 import com.smartmall.ops.domain.entity.enums.StatusTarefa;
+import jakarta.persistence.LockModeType;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -10,6 +12,7 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface TarefaRepository extends BaseRepository<Tarefa> {
@@ -28,6 +31,14 @@ public interface TarefaRepository extends BaseRepository<Tarefa> {
             order by m.dataHoraPrevista
             """)
     List<Tarefa> buscar(LocalDateTime de, LocalDateTime ate, String programadaId, String equipeId, String membroId);
+
+    /** Bloqueia a linha até o fim da transação: dois membros não assumem a mesma tarefa ao mesmo tempo. */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select t from Tarefa t where t.id = :id")
+    Optional<Tarefa> buscarParaAlterar(String id);
+
+    /** Fila de análise: o envio mais antigo primeiro. */
+    List<Tarefa> findByStatusOrderByUltimoEnvioAsc(StatusTarefa status);
 
     List<Tarefa> findByProgramadaIdAndDataHoraPrevistaGreaterThanEqual(String programadaId, LocalDateTime aPartirDe);
 
